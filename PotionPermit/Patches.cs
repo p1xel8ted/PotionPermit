@@ -1,4 +1,6 @@
-﻿using HarmonyLib;
+﻿using System;
+using HarmonyLib;
+using UnityEngine;
 
 namespace PotionPermit;
 
@@ -10,6 +12,7 @@ public class Patches
     public static void Load()
     {
         SettingsManager.resolutionList.Add(Plugin.Resolution);
+        Application.targetFrameRate = Plugin.FrameRate.Value;
     }
     
     [HarmonyPrefix]
@@ -17,5 +20,6 @@ public class Patches
     public static void SetGraphicLayout(ref GraphicSettingUI __instance)
     {
         __instance.resolutionAr.AddItem(Plugin.Resolution);
+        Application.targetFrameRate = Plugin.FrameRate.Value;
     }
 }

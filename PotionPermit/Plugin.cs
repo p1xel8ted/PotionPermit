@@ -12,7 +12,7 @@ namespace PotionPermit
     {
         private const string PluginGuid = "p1xel8ted.potionpermit.resoverride";
         private const string PluginName = "Potion Permit ResolutionOverride";
-        private const string PluginVersion = "0.1.0";
+        private const string PluginVersion = "0.1.1";
 
         private static readonly Harmony Harmony = new(PluginGuid);
         private static ManualLogSource _logger;
@@ -20,6 +20,7 @@ namespace PotionPermit
         private static ConfigEntry<int> _width;
         private static ConfigEntry<int> _height;
         private static ConfigEntry<int> _refresh;
+        public static ConfigEntry<int> FrameRate;
 
         public static Resolution Resolution = new()
         {
@@ -34,6 +35,7 @@ namespace PotionPermit
             _width = Config.Bind("Resolution", "Width", Display.main.systemWidth);
             _height = Config.Bind("Resolution", "Height", Display.main.systemHeight);
             _refresh = Config.Bind("Resolution", "Refresh", 120);
+            FrameRate = Config.Bind("Resolution", "TargetFrameRate", 120, "Don't know if this actually does anything, but the game sets it to 60 by default.");
             Resolution.width = _width.Value;
             Resolution.height = _height.Value;
             Resolution.refreshRate = _refresh.Value;
