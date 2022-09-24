@@ -1,0 +1,25 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.4.32912.340
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PotionPermit", "PotionPermit\PotionPermit.csproj", "{8B3CF1C3-26E8-4CB6-B0EF-64D6C3E85FDD}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{8B3CF1C3-26E8-4CB6-B0EF-64D6C3E85FDD}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{8B3CF1C3-26E8-4CB6-B0EF-64D6C3E85FDD}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{8B3CF1C3-26E8-4CB6-B0EF-64D6C3E85FDD}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{8B3CF1C3-26E8-4CB6-B0EF-64D6C3E85FDD}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {FC6CAEC7-25C8-45D3-A4E8-AD6F2062AA2A}
+	EndGlobalSection
+EndGlobal
