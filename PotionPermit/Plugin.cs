@@ -31,8 +31,8 @@ namespace PotionPermit
         private void Awake()
         {
             _logger = Logger;
-            _width = Config.Bind("Resolution", "Width", 3440);
-            _height = Config.Bind("Resolution", "Height", 1440);
+            _width = Config.Bind("Resolution", "Width", Display.main.systemWidth);
+            _height = Config.Bind("Resolution", "Height", Display.main.systemHeight);
             _refresh = Config.Bind("Resolution", "Refresh", 120);
             Resolution.width = _width.Value;
             Resolution.height = _height.Value;
