@@ -13,7 +13,7 @@ namespace ResolutionOverride
     {
         private const string PluginGuid = "p1xel8ted.potionpermit.resoverride";
         private const string PluginName = "Potion Permit ResolutionOverride";
-        private const string PluginVersion = "0.1.1";
+        private const string PluginVersion = "0.1.2";
 
         private static readonly Harmony Harmony = new(PluginGuid);
         private static ManualLogSource _logger;

@@ -7,7 +7,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ResolutionOverride", "Resol
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SaveAnywhere", "SaveAnywhere\SaveAnywhere.csproj", "{09076C33-55AB-4C6C-84A9-AAE989DA993E}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "QoL", "QoL\QoL.csproj", "{09076C33-55AB-4C6C-84A9-AAE989DA993E}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "AnAlchemicalCollection", "AnAlchemicalCollection\AnAlchemicalCollection.csproj", "{72CEE1D5-78F0-4883-A674-06E3BFCB71A6}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -23,6 +23,10 @@ Global
 		{09076C33-55AB-4C6C-84A9-AAE989DA993E}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{09076C33-55AB-4C6C-84A9-AAE989DA993E}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{09076C33-55AB-4C6C-84A9-AAE989DA993E}.Release|Any CPU.Build.0 = Release|Any CPU
+		{72CEE1D5-78F0-4883-A674-06E3BFCB71A6}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{72CEE1D5-78F0-4883-A674-06E3BFCB71A6}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{72CEE1D5-78F0-4883-A674-06E3BFCB71A6}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{72CEE1D5-78F0-4883-A674-06E3BFCB71A6}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

@@ -12,7 +12,7 @@ namespace SaveAnywhere
     {
         private const string PluginGuid = "p1xel8ted.potionpermit.saveanywhere";
         private const string PluginName = "Potion Permit SaveAnywhere";
-        private const string PluginVersion = "0.1.0";
+        private const string PluginVersion = "0.1.1";
 
         private static readonly Harmony Harmony = new(PluginGuid);
         private static ManualLogSource _logger;

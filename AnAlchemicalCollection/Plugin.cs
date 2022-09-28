@@ -4,13 +4,13 @@ using BepInEx.Logging;
 using HarmonyLib;
 using UnityEngine;
 
-namespace QoL
+namespace AnAlchemicalCollection
 {
     [BepInPlugin(PluginGuid, PluginName, PluginVersion)]
     public class Plugin : BaseUnityPlugin
     {
         private const string PluginGuid = "p1xel8ted.potionpermit.qol";
-        private const string PluginName = "Potion Permit QoL";
+        private const string PluginName = "An Alchemical Collection";
         private const string PluginVersion = "0.1.0";
 
         private static readonly Harmony Harmony = new(PluginGuid);
