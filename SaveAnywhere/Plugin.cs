@@ -1,12 +1,9 @@
-﻿using System;
-using System.Reflection;
+﻿using System.Reflection;
 using BepInEx;
-using BepInEx.Configuration;
 using BepInEx.Logging;
 using HarmonyLib;
 using NotificationEnum;
 using UnityEngine;
-using Object = UnityEngine.Object;
 
 namespace SaveAnywhere
 {
@@ -47,21 +44,14 @@ namespace SaveAnywhere
             if (Input.GetKeyDown(KeyCode.F5))
             {
                 SaveSystemManager.SAVE();
-                var comp = FindObjectOfType<ChemistNotificationUIManager>();
+                var comp = UIManager.NOTIFICATION_UI_MANAGER;
+               // var comp = FindObjectOfType<ChemistNotificationUIManager>();
 
                 var getInactiveEtcNotificationUI = comp.GetInactiveEtcNotificationUI;
                 getInactiveEtcNotificationUI.Set(NotificationID.RESEARCH, comp.GetNotificationLayer);
                 getInactiveEtcNotificationUI.notificationText.text = "Game Saved!";
                 getInactiveEtcNotificationUI.newText.text = "Woo!";
-                // if (!comp.NeedToQueue)
-                // {
-                    getInactiveEtcNotificationUI.Call();
-               // }
-                // else
-                // {
-                //     comp.SetQueue(getInactiveEtcNotificationUI);
-                // }
-
+                getInactiveEtcNotificationUI.Call();
                 comp.notificationOnQueueList.Add(getInactiveEtcNotificationUI);
             }
         }

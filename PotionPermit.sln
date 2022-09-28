@@ -3,9 +3,11 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.4.32912.340
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "PotionPermit", "PotionPermit\PotionPermit.csproj", "{8B3CF1C3-26E8-4CB6-B0EF-64D6C3E85FDD}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ResolutionOverride", "ResolutionOverride\ResolutionOverride.csproj", "{8B3CF1C3-26E8-4CB6-B0EF-64D6C3E85FDD}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SaveAnywhere", "SaveAnywhere\SaveAnywhere.csproj", "{09076C33-55AB-4C6C-84A9-AAE989DA993E}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "QoL", "QoL\QoL.csproj", "{09076C33-55AB-4C6C-84A9-AAE989DA993E}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

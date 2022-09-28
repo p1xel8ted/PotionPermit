@@ -1,8 +1,7 @@
 ﻿using HarmonyLib;
 using UnityEngine;
-using UnityEngine.SceneManagement;
 
-namespace PotionPermit;
+namespace ResolutionOverride;
 
 [HarmonyPatch]
 public class Patches

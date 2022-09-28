@@ -1,14 +1,12 @@
-﻿using System;
+﻿
 using System.Reflection;
 using BepInEx;
 using BepInEx.Configuration;
 using BepInEx.Logging;
 using HarmonyLib;
-using NotificationEnum;
 using UnityEngine;
-using Object = UnityEngine.Object;
 
-namespace PotionPermit
+namespace ResolutionOverride
 {
     [BepInPlugin(PluginGuid, PluginName, PluginVersion)]
     public class Plugin : BaseUnityPlugin
