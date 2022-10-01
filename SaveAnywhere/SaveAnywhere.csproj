@@ -47,23 +47,18 @@
   <ItemGroup>
     <Reference Include="Assembly-CSharp">
       <HintPath>..\lib\Assembly-CSharp-nstrip.dll</HintPath>
-      <Private>False</Private>
     </Reference>
     <Reference Include="Unity.TextMeshPro">
-      <HintPath>F:\Games\steamapps\common\Potion Permit\Potion Permit_Data\Managed\Unity.TextMeshPro.dll</HintPath>
-      <Private>False</Private>
+      <HintPath>..\lib\Unity.TextMeshPro-nstrip.dll</HintPath>
     </Reference>
     <Reference Include="UnityEngine">
-      <HintPath>F:\Games\steamapps\common\Potion Permit\Potion Permit_Data\Managed\UnityEngine.dll</HintPath>
-      <Private>False</Private>
-    </Reference>
-    <Reference Include="UnityEngine.InputModule">
-      <HintPath>F:\Games\steamapps\common\Potion Permit\Potion Permit_Data\Managed\UnityEngine.InputModule.dll</HintPath>
-      <Private>False</Private>
+      <HintPath>..\lib\UnityEngine-nstrip.dll</HintPath>
     </Reference>
     <Reference Include="UnityEngine.UI">
-      <HintPath>F:\Games\steamapps\common\Potion Permit\Potion Permit_Data\Managed\UnityEngine.UI.dll</HintPath>
-      <Private>False</Private>
+      <HintPath>..\lib\UnityEngine.UI-nstrip.dll</HintPath>
+    </Reference>
+    <Reference Include="UnityEngine.UIModule">
+      <HintPath>..\lib\UnityEngine.UIModule-nstrip.dll</HintPath>
     </Reference>
   </ItemGroup>
 </Project>
