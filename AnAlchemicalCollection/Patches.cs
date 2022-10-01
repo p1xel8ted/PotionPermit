@@ -1,7 +1,10 @@
-﻿using System.Linq;
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
 using GlobalEnum;
 using HarmonyLib;
 using UnityEngine;
+using Object = UnityEngine.Object;
 
 namespace AnAlchemicalCollection;
 
@@ -71,8 +74,8 @@ public static class Patches
         __result = spriteIdByName != -1;
         return false;
     }
-    
-    
+
+
     [HarmonyPrefix]
     [HarmonyPatch(typeof(LeanTween), nameof(LeanTween.moveLocalY), typeof(GameObject), typeof(float), typeof(float))]
     public static void LeanTween_moveLocalY(LeanTween __instance, GameObject gameObject, float to, ref float time)
@@ -82,7 +85,8 @@ public static class Patches
             time = 0f;
         }
     }
-    
+
+    //UI_CAMERA/JOURNAL_UI/LAYOUT_SETTINGS */Anchor (MIddleLeft)/JOURNAL_LEFT_SIDE/LIST_CONTAINER/
     //make menu buttons appear instantly
     [HarmonyPrefix]
     [HarmonyPatch(typeof(LeanTween), nameof(LeanTween.value), typeof(float), typeof(float), typeof(float))]
@@ -94,4 +98,37 @@ public static class Patches
         }
     }
 
+    // private static JournalListButton newButton;
+    //
+    // [HarmonyPrefix]
+    // [HarmonyPatch(typeof(JournalUI), nameof(JournalUI.Navigate), typeof(int), typeof(int))]
+    // public static void JournalUI_SHOW_UI(ref JournalUI __instance)
+    // {
+    //     if (__instance == null) return;
+    //     if (newButton != null) return;
+    //     var listContainer =
+    //         GameObject.Find(
+    //             "UI_CAMERA/JOURNAL_UI/LAYOUT_SETTINGS */Anchor (MIddleLeft)/JOURNAL_LEFT_SIDE/LIST_CONTAINER");
+    //     var list = new List<JournalListButton>();
+    //     listContainer.GetComponentsInChildren(list);
+    //     var originalButton = list[3];
+    //     newButton = Object.Instantiate(originalButton, listContainer.transform);
+    //     newButton.buttonTxt.text = "Exit to Desktop";
+    //     newButton.transform.localPosition = new Vector3(0, -100, -10);
+    //     newButton.OnButtonExecuted = new EventHandler(__instance.CallSettingsUI);
+    //     newButton.OnButtonHovered = new EventHandler(__instance.DisplayInfo);
+    //     newButton.OnMouseClick = new EventHandler(__instance.CallSettingsUI);
+    //     newButton.AssignButtonListPosition();
+    //     newButton.enabled = true;
+    //     newButton.buttonActive = true;
+    // }
+    //
+    // [HarmonyPostfix]
+    // [HarmonyPatch(typeof(JournalUI), nameof(JournalUI.GetAllButtonList), MethodType.Getter)]
+    // public static void JournalUI_GetAllButtonList(ref List<ChemistCustomButton> __result)
+    // {
+    //     var button = __result.Last();
+    //     button.name = "EXIT_TO_DESKTOP_MOUSE_DUMMY";
+    //     __result.Add(button);
+    // }
 }

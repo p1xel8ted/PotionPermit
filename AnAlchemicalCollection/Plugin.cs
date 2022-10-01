@@ -1,4 +1,5 @@
-﻿using System.Reflection;
+﻿using System.Collections;
+using System.Reflection;
 using BepInEx;
 using BepInEx.Configuration;
 using BepInEx.Logging;
@@ -22,15 +23,21 @@ namespace AnAlchemicalCollection
         public static ConfigEntry<bool> EnableRunSpeedMultiplier;
         public static ConfigEntry<float> LeftRightRunSpeedMultiplier;
         public static ConfigEntry<bool> SkipLogos;
-        
+        public static ConfigEntry<bool> SaveOnExitWithF11;
+
 
         private void Awake()
         {
             _logger = Logger;
             SkipLogos = Config.Bind("Logos", "SkipLogos", true, "Enable/disable intro logos.");
-            EnableRunSpeedMultiplier = Config.Bind("Player Speed", "ModifyRunSpeed", true, "Enable/disable modification of player run speed.");
-            RunSpeedMultiplier = Config.Bind("Player Speed", "RunSpeedMultiplier", 1.5f, "Player run speed multiplier. Default is 1.5 or 50% faster.");
-            LeftRightRunSpeedMultiplier = Config.Bind("Player Speed", "LeftRightRunSpeedMultiplier", 1.25f, "You shouldn't need to touch this value. But I included it just in case. It's used to make running left/right roughly the same speed as up/down/diagonal.");
+            SaveOnExitWithF11 = Config.Bind("Saving", "SaveOnExitWithF11", true,
+                "When using F11 to immediately exit, save the game before exiting.");
+            EnableRunSpeedMultiplier = Config.Bind("Player Speed", "ModifyRunSpeed", true,
+                "Enable/disable modification of player run speed.");
+            RunSpeedMultiplier = Config.Bind("Player Speed", "RunSpeedMultiplier", 1.5f,
+                "Player run speed multiplier. Default is 1.5 or 50% faster.");
+            LeftRightRunSpeedMultiplier = Config.Bind("Player Speed", "LeftRightRunSpeedMultiplier", 1.25f,
+                "You shouldn't need to touch this value. But I included it just in case. It's used to make running left/right roughly the same speed as up/down/diagonal.");
         }
 
         private void OnEnable()
@@ -52,7 +59,7 @@ namespace AnAlchemicalCollection
             {
                 UIManager.NEWS_BOARD_UI.Call();
             }
-            
+
             if (Input.GetKeyDown(KeyCode.F7))
             {
                 if (UIManager.GAME_HUD.active)
@@ -63,9 +70,31 @@ namespace AnAlchemicalCollection
                 {
                     UIManager.GAME_HUD.Show();
                 }
+
                 UIManager.GAME_HUD.topBlackBar.SetActive(false);
                 UIManager.GAME_HUD.botBlackBar.SetActive(false);
             }
+
+            if (Input.GetKeyDown(KeyCode.F12))
+            {
+                StartCoroutine(SaveAndExit());
+            }
+        }
+
+        private static IEnumerator SaveAndExit()
+        {
+            if (SaveOnExitWithF11.Value)
+            {
+                SaveSystemManager.SAVE();
+                Helper.ShowNotification("Game Saved! Exiting...", "Bye!");
+            }
+            else
+            {
+                Helper.ShowNotification("Exiting...", "Bye!");
+            }
+
+            yield return new WaitForSeconds(2f);
+            Application.Quit();
         }
 
         internal static void L(string message)

@@ -12,7 +12,7 @@ namespace SaveAnywhere
     {
         private const string PluginGuid = "p1xel8ted.potionpermit.saveanywhere";
         private const string PluginName = "Potion Permit SaveAnywhere";
-        private const string PluginVersion = "0.1.1";
+        private const string PluginVersion = "0.1.2";
 
         private static readonly Harmony Harmony = new(PluginGuid);
         private static ManualLogSource _logger;
@@ -50,7 +50,7 @@ namespace SaveAnywhere
                 var getInactiveEtcNotificationUI = comp.GetInactiveEtcNotificationUI;
                 getInactiveEtcNotificationUI.Set(NotificationID.RESEARCH, comp.GetNotificationLayer);
                 getInactiveEtcNotificationUI.notificationText.text = "Game Saved!";
-                getInactiveEtcNotificationUI.newText.text = "Woo!";
+                getInactiveEtcNotificationUI.newText.text = "Done.";
                 getInactiveEtcNotificationUI.Call();
                 comp.notificationOnQueueList.Add(getInactiveEtcNotificationUI);
             }
