@@ -21,5 +21,7 @@ public class Patches
         __instance.resolutionAr.AddItem(Plugin.Resolution);
         Application.targetFrameRate = Plugin.FrameRate.Value;
     }
+    
+    
 
 }
