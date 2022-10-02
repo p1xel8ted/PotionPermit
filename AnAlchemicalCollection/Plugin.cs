@@ -13,7 +13,7 @@ namespace AnAlchemicalCollection
     {
         private const string PluginGuid = "p1xel8ted.potionpermit.alchemical_collection";
         private const string PluginName = "An Alchemical Collection";
-        private const string PluginVersion = "0.1.1";
+        private const string PluginVersion = "0.1.2";
 
         private static readonly Harmony Harmony = new(PluginGuid);
         private static ManualLogSource _logger;
