@@ -21,15 +21,25 @@ public static class Patches
     public static void PlayerCharacter_Move()
     {
         if (!Plugin.EnableRunSpeedMultiplier.Value) return;
+        
+        if (PlayerCharacter.Instance.CurrentDirection is Direction.None) return;
+        
+        if (PlayerCharacter.Instance.CurrentDirection is Direction.Top or Direction.Bottom)
+        {
+            PlayerCharacter.Instance.MoveSpeed = OriginalPlayerSpeed * Plugin.RunSpeedMultiplier.Value;
+            Plugin.L($"Running Up/Down: Speed: {PlayerCharacter.Instance.MoveSpeed}");
+            return;
+        }
+
         if (PlayerCharacter.Instance.CurrentDirection is Direction.Left or Direction.Right)
         {
             PlayerCharacter.Instance.MoveSpeed = (OriginalPlayerSpeed * Plugin.RunSpeedMultiplier.Value) *
                                                  Plugin.LeftRightRunSpeedMultiplier.Value;
+            Plugin.L($"Running Left/Right: Speed: {PlayerCharacter.Instance.MoveSpeed}");
+            return;
         }
-        else
-        {
-            PlayerCharacter.Instance.MoveSpeed = OriginalPlayerSpeed * Plugin.RunSpeedMultiplier.Value;
-        }
+
+        Plugin.L($"Unknown direction: {PlayerCharacter.Instance.CurrentDirection},  Speed: {PlayerCharacter.Instance.MoveSpeed}");
     }
 
     //sets dog speed to 75% of the modified player speed

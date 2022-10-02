@@ -4,6 +4,7 @@ using BepInEx;
 using BepInEx.Configuration;
 using BepInEx.Logging;
 using Cinemachine;
+using ControllerEnum;
 using HarmonyLib;
 using UnityEngine;
 using UnityEngine.SceneManagement;
@@ -22,6 +23,7 @@ namespace AnAlchemicalCollection
         public static ConfigEntry<float> RunSpeedMultiplier;
         public static ConfigEntry<bool> EnableRunSpeedMultiplier;
         public static ConfigEntry<float> LeftRightRunSpeedMultiplier;
+        public static ConfigEntry<float> DiagonalRunSpeedMultiplier;
         public static ConfigEntry<bool> SkipLogos;
         public static ConfigEntry<bool> SaveOnExitWithF11;
 
@@ -37,7 +39,9 @@ namespace AnAlchemicalCollection
             RunSpeedMultiplier = Config.Bind("Player Speed", "RunSpeedMultiplier", 1.5f,
                 "Player run speed multiplier. Default is 1.5 or 50% faster.");
             LeftRightRunSpeedMultiplier = Config.Bind("Player Speed", "LeftRightRunSpeedMultiplier", 1.25f,
-                "You shouldn't need to touch this value. But I included it just in case. It's used to make running left/right roughly the same speed as up/down/diagonal.");
+                "You shouldn't need to touch this value. But I included it just in case. It's used to make running left/right roughly the same speed as up/down.");
+            DiagonalRunSpeedMultiplier = Config.Bind("Player Speed", "DiagonalRunSpeedMultiplier", 1.25f,
+                "You shouldn't need to touch this value. But I included it just in case. It's used to make running diagonally roughly the same speed as up/down.");
         }
 
         private void OnEnable()
@@ -54,6 +58,8 @@ namespace AnAlchemicalCollection
 
         private void Update()
         {
+            // ControllerManager.currentActiveDevice = ControllerDevice.GAME_PAD;
+            // ControllerManager.SWITCH_CONTROL(ControlType.GAME);
             if (UIManager.MAIN_MENU is not null && UIManager.MAIN_MENU.isActive) return;
             if (Input.GetKeyDown(KeyCode.F6))
             {
@@ -75,7 +81,7 @@ namespace AnAlchemicalCollection
                 UIManager.GAME_HUD.botBlackBar.SetActive(false);
             }
 
-            if (Input.GetKeyDown(KeyCode.F12))
+            if (Input.GetKeyDown(KeyCode.F11))
             {
                 StartCoroutine(SaveAndExit());
             }
