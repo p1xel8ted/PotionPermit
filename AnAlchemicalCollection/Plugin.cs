@@ -3,11 +3,8 @@ using System.Reflection;
 using BepInEx;
 using BepInEx.Configuration;
 using BepInEx.Logging;
-using Cinemachine;
-using ControllerEnum;
 using HarmonyLib;
 using UnityEngine;
-using UnityEngine.SceneManagement;
 
 namespace AnAlchemicalCollection
 {
@@ -23,16 +20,15 @@ namespace AnAlchemicalCollection
         public static ConfigEntry<float> RunSpeedMultiplier;
         public static ConfigEntry<bool> EnableRunSpeedMultiplier;
         public static ConfigEntry<float> LeftRightRunSpeedMultiplier;
-        public static ConfigEntry<float> DiagonalRunSpeedMultiplier;
         public static ConfigEntry<bool> SkipLogos;
-        public static ConfigEntry<bool> SaveOnExitWithF11;
+        private static ConfigEntry<bool> _saveOnExitWithF11;
 
 
         private void Awake()
         {
             _logger = Logger;
             SkipLogos = Config.Bind("Logos", "SkipLogos", true, "Enable/disable intro logos.");
-            SaveOnExitWithF11 = Config.Bind("Saving", "SaveOnExitWithF11", true,
+            _saveOnExitWithF11 = Config.Bind("Saving", "SaveOnExitWithF11", true,
                 "When using F11 to immediately exit, save the game before exiting.");
             EnableRunSpeedMultiplier = Config.Bind("Player Speed", "ModifyRunSpeed", true,
                 "Enable/disable modification of player run speed.");
@@ -40,8 +36,6 @@ namespace AnAlchemicalCollection
                 "Player run speed multiplier. Default is 1.5 or 50% faster.");
             LeftRightRunSpeedMultiplier = Config.Bind("Player Speed", "LeftRightRunSpeedMultiplier", 1.25f,
                 "You shouldn't need to touch this value. But I included it just in case. It's used to make running left/right roughly the same speed as up/down.");
-            DiagonalRunSpeedMultiplier = Config.Bind("Player Speed", "DiagonalRunSpeedMultiplier", 1.25f,
-                "You shouldn't need to touch this value. But I included it just in case. It's used to make running diagonally roughly the same speed as up/down.");
         }
 
         private void OnEnable()
@@ -89,7 +83,7 @@ namespace AnAlchemicalCollection
 
         private static IEnumerator SaveAndExit()
         {
-            if (SaveOnExitWithF11.Value)
+            if (_saveOnExitWithF11.Value)
             {
                 SaveSystemManager.SAVE();
                 Helper.ShowNotification("Game Saved! Exiting...", "Bye!");
