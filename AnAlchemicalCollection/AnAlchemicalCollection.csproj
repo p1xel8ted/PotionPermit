@@ -50,9 +50,6 @@
       <HintPath>F:\Games\steamapps\common\Potion Permit\Potion Permit_Data\Managed\Cinemachine.dll</HintPath>
       <Private>False</Private>
     </Reference>
-    <Reference Include="Newtonsoft.Json">
-      <HintPath>F:\Games\steamapps\common\Potion Permit\Potion Permit_Data\Managed\Newtonsoft.Json.dll</HintPath>
-    </Reference>
     <Reference Include="Unity.TextMeshPro">
       <HintPath>F:\Games\steamapps\common\Potion Permit\Potion Permit_Data\Managed\Unity.TextMeshPro.dll</HintPath>
       <Private>False</Private>
