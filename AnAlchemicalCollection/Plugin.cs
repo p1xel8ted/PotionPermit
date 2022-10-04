@@ -24,7 +24,7 @@ namespace AnAlchemicalCollection
         private const string PluginVersion = "0.1.2";
 
         private static readonly Harmony Harmony = new(PluginGuid);
-        public static string SavePath;
+     
         private static ManualLogSource _logger;
         public static ConfigEntry<float> RunSpeedMultiplier;
         public static ConfigEntry<bool> EnableRunSpeedMultiplier;
@@ -51,10 +51,9 @@ namespace AnAlchemicalCollection
         private void Awake()
         {
             _logger = Logger;
-            SavePath = Path.Combine(Paths.ConfigPath, "AnAlchemicalCollection");
-            Directory.CreateDirectory(SavePath);
+       
             //resolution
-            ModifyResolutions = Config.Bind("Resolution", "ModifyResolutions", true, "Enable/Disable modifying the resolution list. Intended for use with a custom resolution.");
+            ModifyResolutions = Config.Bind("Resolution", "ModifyResolutions", false, "Enable/Disable modifying the resolution list. Intended for use with a custom resolution.");
             _width = Config.Bind("Resolution", "Width", Display.main.systemWidth, "The width of the resolution to add to the list.");
             _height = Config.Bind("Resolution", "Height", Display.main.systemHeight, "The height of the resolution to add to the list.");
             _refresh = Config.Bind("Resolution", "Refresh", 60, "The refresh rate of the resolution to add to the list.");
