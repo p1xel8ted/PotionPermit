@@ -1,10 +1,8 @@
 ﻿using System.Collections.Generic;
-using CharacterChemist;
 using CharacterIDEnum;
 using GlobalEnum;
 using HarmonyLib;
 using TutorialEnum;
-using UnityEngine;
 
 namespace AnAlchemicalCollection;
 

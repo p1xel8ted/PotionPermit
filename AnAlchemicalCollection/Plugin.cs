@@ -1,18 +1,12 @@
 ﻿using System.Collections;
-using System.Collections.Generic;
-using System.IO;
 using System.Reflection;
-using AchievementEnum;
-using AudioEnum;
 using BepInEx;
 using BepInEx.Configuration;
 using BepInEx.Logging;
 using FastTravelEnum;
 using GlobalEnum;
 using HarmonyLib;
-using NotificationEnum;
 using UnityEngine;
-using Vector3 = System.Numerics.Vector3;
 
 namespace AnAlchemicalCollection
 {
