@@ -1,4 +1,5 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using System.Reflection;
 using BepInEx;
 using BepInEx.Configuration;
@@ -15,10 +16,10 @@ namespace AnAlchemicalCollection
     {
         private const string PluginGuid = "p1xel8ted.potionpermit.alchemical_collection";
         private const string PluginName = "An Alchemical Collection";
-        private const string PluginVersion = "0.1.2";
+        private const string PluginVersion = "0.1.3";
 
         private static readonly Harmony Harmony = new(PluginGuid);
-     
+
         private static ManualLogSource _logger;
         public static ConfigEntry<float> RunSpeedMultiplier;
         public static ConfigEntry<bool> EnableRunSpeedMultiplier;
@@ -35,6 +36,12 @@ namespace AnAlchemicalCollection
         private static ConfigEntry<int> _refresh;
         public static ConfigEntry<int> FrameRate;
 
+        private static ConfigEntry<string> _exitKeybind;
+        private static ConfigEntry<string> _fastTravelKeybind;
+        private static ConfigEntry<string> _quickSaveKeybind;
+        private static ConfigEntry<string> _newsBoardKeybind;
+        private static ConfigEntry<string> _toggleHudKeybind;
+
         public static Resolution Resolution = new()
         {
             width = 3440,
@@ -45,7 +52,7 @@ namespace AnAlchemicalCollection
         private void Awake()
         {
             _logger = Logger;
-       
+
             //resolution
             ModifyResolutions = Config.Bind("Resolution", "ModifyResolutions", false, "Enable/Disable modifying the resolution list. Intended for use with a custom resolution.");
             _width = Config.Bind("Resolution", "Width", Display.main.systemWidth, "The width of the resolution to add to the list.");
@@ -65,12 +72,19 @@ namespace AnAlchemicalCollection
             SpeedUpMenuIntro = Config.Bind("Logos", "SpeedUpMenuIntro", true, "Makes the menu appear instantly instead of the scroll down animation.");
 
             //saving
-            _saveOnExitWithF11 = Config.Bind("Saving", "SaveOnExitWithF11", true, "When using F11 to immediately exit, save the game before exiting.");
+            _saveOnExitWithF11 = Config.Bind("Saving", "SaveOnExitWithQuickExit", true, "When using Quick Exit to immediately exit, save the game before exiting.");
 
             //player speed
             EnableRunSpeedMultiplier = Config.Bind("Player Speed", "ModifyRunSpeed", true, "Enable/disable modification of player run speed.");
             RunSpeedMultiplier = Config.Bind("Player Speed", "RunSpeedMultiplier", 1.5f, "Player run speed multiplier. Default is 1.5 or 50% faster.");
             LeftRightRunSpeedMultiplier = Config.Bind("Player Speed", "LeftRightRunSpeedMultiplier", 1.25f, "You shouldn't need to touch this value. But I included it just in case. It's used to make running left/right roughly the same speed as up/down.");
+
+            //keybinds
+            _exitKeybind = Config.Bind("Keybinds", "QuickExitKeybind", "F11", "Keybind to exit the game. Default is F11.");
+            _fastTravelKeybind = Config.Bind("Keybinds", "FastTravelKeybind", "F4", "Fast travel keybind. Default is F4.");
+            _quickSaveKeybind = Config.Bind("Keybinds", "QuickSaveKeybind", "F5", "Quick save keybind. Default is F5.");
+            _newsBoardKeybind = Config.Bind("Keybinds", "NewsBoardKeybind", "F6", "News board toggle keybind. Default is F6.");
+            _toggleHudKeybind = Config.Bind("Keybinds", "ToggleHudKeybind", "F7", "Hud toggle keybind keybind. Default is F7.");
         }
 
         private void OnEnable()
@@ -90,20 +104,21 @@ namespace AnAlchemicalCollection
         {
             if (UIManager.MAIN_MENU is not null && UIManager.MAIN_MENU.isActive) return;
 
-            if (Input.GetKeyDown(KeyCode.F4))
+            if (Input.GetKeyDown(Enum.TryParse<KeyCode>(_fastTravelKeybind.Value, out var ftKey) ? ftKey : KeyCode.F4))
             {
                 FastTravelPatches.DoFastTravel = true;
                 StartCoroutine(FastTravelIE());
             }
 
-            if (Input.GetKeyDown(KeyCode.F5))
+            if (Input.GetKeyDown(Enum.TryParse<KeyCode>(_quickSaveKeybind.Value, out var qsKey) ? qsKey : KeyCode.F5))
             {
                 SaveSystemManager.SAVE();
                 Helper.ShowNotification("Game Saved!", "Done!");
             }
 
-            if (Input.GetKeyDown(KeyCode.F6))
+            if (Input.GetKeyDown(Enum.TryParse<KeyCode>(_newsBoardKeybind.Value, out var nbKey) ? nbKey : KeyCode.F6))
             {
+                if (UIManager.NEWS_BOARD_UI is null) return;
                 if (UIManager.NEWS_BOARD_UI.isActive)
                 {
                     UIManager.NEWS_BOARD_UI.OnRightClick();
@@ -115,8 +130,9 @@ namespace AnAlchemicalCollection
                 }
             }
 
-            if (Input.GetKeyDown(KeyCode.F7))
+            if (Input.GetKeyDown(Enum.TryParse<KeyCode>(_toggleHudKeybind.Value, out var hudKey) ? hudKey : KeyCode.F7))
             {
+                if (UIManager.GAME_HUD is null) return;
                 if (UIManager.GAME_HUD.active)
                 {
                     UIManager.GAME_HUD.Hide();
@@ -130,7 +146,7 @@ namespace AnAlchemicalCollection
                 UIManager.GAME_HUD.botBlackBar.SetActive(false);
             }
 
-            if (Input.GetKeyDown(KeyCode.F11))
+            if (Input.GetKeyDown(Enum.TryParse<KeyCode>(_exitKeybind.Value, out var exitKey) ? exitKey : KeyCode.F11))
             {
                 StartCoroutine(SaveAndExitIE());
             }

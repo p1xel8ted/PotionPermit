@@ -27,11 +27,11 @@
   </PropertyGroup>
 
   <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
-    <OutputPath>F:\Games\steamapps\common\Potion Permit\BepInEx\plugins</OutputPath>
+    <OutputPath>H:\Games\steamapps\common\Potion Permit\BepInEx\scripts</OutputPath>
   </PropertyGroup>
 
   <PropertyGroup Condition=" '$(Configuration)' == 'Release' ">
-    <OutputPath>F:\Games\steamapps\common\Potion Permit\BepInEx\plugins</OutputPath>
+    <OutputPath>H:\Games\steamapps\common\Potion Permit\BepInEx\scripts</OutputPath>
   </PropertyGroup>
 
   <ItemGroup>
