@@ -57,6 +57,10 @@ libs/
 libs
 lib/
 lib
+.libs/
+.libs
+.lib/
+.lib
 
 # Gradle
 .idea/**/gradle.xml
