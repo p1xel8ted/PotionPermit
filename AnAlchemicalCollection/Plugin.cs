@@ -1,5 +1,5 @@
-﻿using System;
-using System.Collections;
+﻿using System.Collections;
+using System.Linq;
 using System.Reflection;
 using BepInEx;
 using BepInEx.Configuration;
@@ -8,176 +8,214 @@ using FastTravelEnum;
 using GlobalEnum;
 using HarmonyLib;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 
-namespace AnAlchemicalCollection
+namespace AnAlchemicalCollection;
+
+[BepInPlugin(PluginGuid, PluginName, PluginVersion)]
+public class Plugin : BaseUnityPlugin
 {
-    [BepInPlugin(PluginGuid, PluginName, PluginVersion)]
-    public class Plugin : BaseUnityPlugin
+    private const string PluginGuid = "p1xel8ted.potionpermit.alchemical_collection";
+    private const string PluginName = "An Alchemical Collection";
+    private const string PluginVersion = "0.1.4";
+  
+    private static readonly Harmony Harmony = new(PluginGuid);
+    private static ManualLogSource Log { get; set; }
+    public static ConfigEntry<float> RunSpeedMultiplier { get; private set; }
+    public static ConfigEntry<bool> EnableRunSpeedMultiplier { get; private set; }
+    public static ConfigEntry<float> LeftRightRunSpeedMultiplier { get; private set; }
+    public static ConfigEntry<bool> SpeedUpMenuIntro { get; private set; }
+    public static ConfigEntry<bool> AutoChangeTool { get; private set; }
+    public static ConfigEntry<bool> HalveToolStaminaUsage { get; private set; }
+    public static ConfigEntry<bool> SkipLogos { get; private set; }
+    private static ConfigEntry<bool> SaveOnExitWithF11 { get; set; }
+
+    public static ConfigEntry<bool> ModifyResolutions { get; private set; }
+    public static ConfigEntry<bool> CustomTargetFramerate { get; private set; }
+    private static ConfigEntry<int> Width { get; set; }
+    private static ConfigEntry<int> Height { get; set; }
+    private static ConfigEntry<int> Refresh { get; set; }
+    public static ConfigEntry<int> FrameRate { get; private set; }
+    private static ConfigEntry<KeyboardShortcut> ExitKeybind { get; set; }
+    private static ConfigEntry<KeyboardShortcut> FastTravelKeybind { get; set; }
+    private static ConfigEntry<KeyboardShortcut> QuickSaveKeybind { get; set; }
+    private static ConfigEntry<KeyboardShortcut> NewsBoardKeybind { get; set; }
+    private static ConfigEntry<KeyboardShortcut> ToggleHudKeybind { get; set; }
+
+    internal static ConfigEntry<int> CameraZoom { get; private set; }
+    internal static int CameraZoomBacking { get; set; }
+    private static ConfigEntry<bool> TimeManipulation { get; set; }
+    internal static ConfigEntry<float> TimeMultiplier { get; private set; }
+    private static TimePatches TimeInstance { get; set; }
+   
+    public static Resolution Resolution = new()
     {
-        private const string PluginGuid = "p1xel8ted.potionpermit.alchemical_collection";
-        private const string PluginName = "An Alchemical Collection";
-        private const string PluginVersion = "0.1.3";
+        width = Display.main.systemWidth,
+        height = Display.main.systemHeight,
+        refreshRate = Screen.resolutions.Max(a => a.refreshRate)
+    };
 
-        private static readonly Harmony Harmony = new(PluginGuid);
+    private void Awake()
+    {
+        
+        Log = Logger;
+        SceneManager.sceneLoaded += SceneManager_sceneLoaded;
+        TimeInstance = gameObject.AddComponent<TimePatches>();
+       
+        // Display Resolution Configuration
+        ModifyResolutions = Config.Bind("1. Display Settings", "Enable Custom Resolution", false, new ConfigDescription("Toggle the usage of custom resolution settings.", null, new ConfigurationManagerAttributes {Order = 101}));
+        Width = Config.Bind("1. Display Settings", "Custom Width", Display.main.systemWidth, new ConfigDescription("Define the custom display width.", null, new ConfigurationManagerAttributes {Order = 100}));
+        Height = Config.Bind("1. Display Settings", "Custom Height", Display.main.systemHeight, new ConfigDescription("Define the custom display height.", null, new ConfigurationManagerAttributes {Order = 99}));
+        Refresh = Config.Bind("1. Display Settings", "Custom Refresh Rate", Screen.resolutions.Max(a => a.refreshRate), new ConfigDescription("Define the custom display refresh rate.", null, new ConfigurationManagerAttributes {Order = 98}));
+        CustomTargetFramerate = Config.Bind("1. Display Settings", "Enable Custom Target Frame Rate", false, new ConfigDescription("Toggle the usage of custom target frame rate settings. May or may not do anything.", null, new ConfigurationManagerAttributes {Order = 97}));
+        FrameRate = Config.Bind("1. Display Settings", "Target Frame Rate", Screen.resolutions.Max(a => a.refreshRate), new ConfigDescription("Set the target frame rate.", null, new ConfigurationManagerAttributes {Order = 96}));
+        Resolution.width = Width.Value;
+        Resolution.height = Height.Value;
+        Resolution.refreshRate = Refresh.Value;
 
-        private static ManualLogSource _logger;
-        public static ConfigEntry<float> RunSpeedMultiplier;
-        public static ConfigEntry<bool> EnableRunSpeedMultiplier;
-        public static ConfigEntry<float> LeftRightRunSpeedMultiplier;
-        public static ConfigEntry<bool> SpeedUpMenuIntro;
-        public static ConfigEntry<bool> AutoChangeTool;
-        public static ConfigEntry<bool> HalveToolStaminaUsage;
-        public static ConfigEntry<bool> SkipLogos;
-        private static ConfigEntry<bool> _saveOnExitWithF11;
+        // Tool Usage Configuration
+        AutoChangeTool = Config.Bind("2. Tools Settings", "Automatic Tool Switching", true, new ConfigDescription("Enable the automatic tool switching based on context.", null, new ConfigurationManagerAttributes {Order = 90}));
+        HalveToolStaminaUsage = Config.Bind("2. Tools Settings", "Halve Stamina Usage", true, new ConfigDescription("Enable the halving of stamina usage for tools.", null, new ConfigurationManagerAttributes {Order = 89}));
 
-        public static ConfigEntry<bool> ModifyResolutions;
-        private static ConfigEntry<int> _width;
-        private static ConfigEntry<int> _height;
-        private static ConfigEntry<int> _refresh;
-        public static ConfigEntry<int> FrameRate;
+        // Game Intro Configuration
+        SkipLogos = Config.Bind("3. Intro Settings", "Skip Intro Logos", true, new ConfigDescription("Enable or disable the intro logos.", null, new ConfigurationManagerAttributes {Order = 80}));
+        SpeedUpMenuIntro = Config.Bind("3. Intro Settings", "Accelerate Menu Intro", true, new ConfigDescription("Enable or disable the acceleration of menu intro.", null, new ConfigurationManagerAttributes {Order = 79}));
 
-        private static ConfigEntry<string> _exitKeybind;
-        private static ConfigEntry<string> _fastTravelKeybind;
-        private static ConfigEntry<string> _quickSaveKeybind;
-        private static ConfigEntry<string> _newsBoardKeybind;
-        private static ConfigEntry<string> _toggleHudKeybind;
+        // Saving Configuration
+        SaveOnExitWithF11 = Config.Bind("4. Saving Settings", "Save On Quick Exit", true, new ConfigDescription("Enable saving the game on quick exit.", null, new ConfigurationManagerAttributes {Order = 70}));
 
-        public static Resolution Resolution = new()
+        // Player Speed Configuration
+        EnableRunSpeedMultiplier = Config.Bind("5. Player Speed", "Modify Run Speed", true, new ConfigDescription("Enable the modification of player run speed.", null, new ConfigurationManagerAttributes {Order = 60}));
+        RunSpeedMultiplier = Config.Bind("5. Player Speed", "Run Speed Multiplier", 1.5f, new ConfigDescription("Set the player run speed multiplier.", null, new ConfigurationManagerAttributes {Order = 59}));
+        LeftRightRunSpeedMultiplier = Config.Bind("5. Player Speed", "Lateral Run Speed Multiplier", 1.25f, new ConfigDescription("Set the lateral run speed multiplier.", null, new ConfigurationManagerAttributes {Order = 58}));
+
+        // Keybinds Configuration
+        ExitKeybind = Config.Bind("6. Keybinds", "Quick Exit Key", new KeyboardShortcut(KeyCode.F11), new ConfigDescription("Set the key for quick exit.", null, new ConfigurationManagerAttributes {Order = 50}));
+        FastTravelKeybind = Config.Bind("6. Keybinds", "Fast Travel Key", new KeyboardShortcut(KeyCode.F4), new ConfigDescription("Set the key for fast travel.", null, new ConfigurationManagerAttributes {Order = 49}));
+        QuickSaveKeybind = Config.Bind("6. Keybinds", "Quick Save Key", new KeyboardShortcut(KeyCode.F5), new ConfigDescription("Set the key for quick save.", null, new ConfigurationManagerAttributes {Order = 48}));
+        NewsBoardKeybind = Config.Bind("6. Keybinds", "News Board Toggle Key", new KeyboardShortcut(KeyCode.F6), new ConfigDescription("Set the key to toggle the news board.", null, new ConfigurationManagerAttributes {Order = 47}));
+        ToggleHudKeybind = Config.Bind("6. Keybinds", "HUD Toggle Key", new KeyboardShortcut(KeyCode.F7), new ConfigDescription("Set the key to toggle the HUD.", null, new ConfigurationManagerAttributes {Order = 46}));
+
+        //Time manipulation
+        TimeManipulation = Config.Bind("7. Time Manipulation", "Enable Time Manipulation", true, new ConfigDescription("Enable time manipulation.", null, new ConfigurationManagerAttributes {Order = 45}));
+        TimeManipulation.SettingChanged += (_, _) => { TimeInstance.enabled = TimeManipulation.Value; };
+        TimeMultiplier = Config.Bind("7. Time Manipulation", "Time Multiplier", 1.0f, new ConfigDescription("Set the time multiplier.", new AcceptableValueRange<float>(1, 10), new ConfigurationManagerAttributes {ShowRangeAsPercent = false, Order = 44}));
+        TimeMultiplier.SettingChanged += (_, _) =>
         {
-            width = 3440,
-            height = 1440,
-            refreshRate = 120
+            if (!TimeManipulation.Value) return;
+            TimeInstance.UpdateValues();
         };
+    }
 
-        private void Awake()
+    private static void SceneManager_sceneLoaded(Scene arg0, LoadSceneMode arg1)
+    {
+        if (CustomTargetFramerate.Value)
         {
-            _logger = Logger;
-
-            //resolution
-            ModifyResolutions = Config.Bind("Resolution", "ModifyResolutions", false, "Enable/Disable modifying the resolution list. Intended for use with a custom resolution.");
-            _width = Config.Bind("Resolution", "Width", Display.main.systemWidth, "The width of the resolution to add to the list.");
-            _height = Config.Bind("Resolution", "Height", Display.main.systemHeight, "The height of the resolution to add to the list.");
-            _refresh = Config.Bind("Resolution", "Refresh", 60, "The refresh rate of the resolution to add to the list.");
-            FrameRate = Config.Bind("Resolution", "TargetFrameRate", 60, "Don't know if this actually does anything, but the game sets it to 60 by default.");
-            Resolution.width = _width.Value;
-            Resolution.height = _height.Value;
-            Resolution.refreshRate = _refresh.Value;
-
-            //Tools
-            AutoChangeTool = Config.Bind("Tools", "AutoChangeTool", true, "Tools will automatically change to the required time when near plants or hitting rocks/trees.");
-            HalveToolStaminaUsage = Config.Bind("Tools", "HalveToolStaminaUsage", true, "Energy is taken every 2nd hit instead of every hit. Effectively halving the stamina usage.");
-
-            //Logos-MainMenu
-            SkipLogos = Config.Bind("Logos", "SkipLogos", true, "Enable/disable intro logos.");
-            SpeedUpMenuIntro = Config.Bind("Logos", "SpeedUpMenuIntro", true, "Makes the menu appear instantly instead of the scroll down animation.");
-
-            //saving
-            _saveOnExitWithF11 = Config.Bind("Saving", "SaveOnExitWithQuickExit", true, "When using Quick Exit to immediately exit, save the game before exiting.");
-
-            //player speed
-            EnableRunSpeedMultiplier = Config.Bind("Player Speed", "ModifyRunSpeed", true, "Enable/disable modification of player run speed.");
-            RunSpeedMultiplier = Config.Bind("Player Speed", "RunSpeedMultiplier", 1.5f, "Player run speed multiplier. Default is 1.5 or 50% faster.");
-            LeftRightRunSpeedMultiplier = Config.Bind("Player Speed", "LeftRightRunSpeedMultiplier", 1.25f, "You shouldn't need to touch this value. But I included it just in case. It's used to make running left/right roughly the same speed as up/down.");
-
-            //keybinds
-            _exitKeybind = Config.Bind("Keybinds", "QuickExitKeybind", "F11", "Keybind to exit the game. Default is F11.");
-            _fastTravelKeybind = Config.Bind("Keybinds", "FastTravelKeybind", "F4", "Fast travel keybind. Default is F4.");
-            _quickSaveKeybind = Config.Bind("Keybinds", "QuickSaveKeybind", "F5", "Quick save keybind. Default is F5.");
-            _newsBoardKeybind = Config.Bind("Keybinds", "NewsBoardKeybind", "F6", "News board toggle keybind. Default is F6.");
-            _toggleHudKeybind = Config.Bind("Keybinds", "ToggleHudKeybind", "F7", "Hud toggle keybind keybind. Default is F7.");
+            Application.targetFrameRate = FrameRate.Value;
         }
 
-        private void OnEnable()
+        if (ModifyResolutions.Value)
         {
-            Harmony.PatchAll(Assembly.GetExecutingAssembly());
-            L($"Plugin {PluginName} is loaded!");
+            Screen.SetResolution(Resolution.width, Resolution.height, Screen.fullScreen, Resolution.refreshRate);
+        }
+    }
+
+
+    private void OnEnable()
+    {
+        Harmony.PatchAll(Assembly.GetExecutingAssembly());
+        L($"Plugin {PluginName} is loaded!");
+    }
+
+    private void OnDisable()
+    {
+        Harmony.UnpatchSelf();
+        L($"Plugin {PluginName} is unloaded!");
+    }
+
+
+    private void Update()
+    {
+        if (UIManager.MAIN_MENU is not null && UIManager.MAIN_MENU.isActive) return;
+
+        if (FastTravelKeybind.Value.IsUp())
+        {
+            FastTravelPatches.DoFastTravel = true;
+            StartCoroutine(FastTravelIE());
         }
 
-        private void OnDisable()
+        if (QuickSaveKeybind.Value.IsUp())
         {
-            Harmony.UnpatchSelf();
-            L($"Plugin {PluginName} is unloaded!");
+            SaveSystemManager.SAVE();
+            Helper.ShowNotification("Game Saved!", "Done!");
         }
 
-
-        private void Update()
+        if (NewsBoardKeybind.Value.IsUp())
         {
-            if (UIManager.MAIN_MENU is not null && UIManager.MAIN_MENU.isActive) return;
-
-            if (Input.GetKeyDown(Enum.TryParse<KeyCode>(_fastTravelKeybind.Value, out var ftKey) ? ftKey : KeyCode.F4))
+            if (UIManager.NEWS_BOARD_UI is null) return;
+            if (UIManager.NEWS_BOARD_UI.isActive)
             {
-                FastTravelPatches.DoFastTravel = true;
-                StartCoroutine(FastTravelIE());
-            }
-
-            if (Input.GetKeyDown(Enum.TryParse<KeyCode>(_quickSaveKeybind.Value, out var qsKey) ? qsKey : KeyCode.F5))
-            {
-                SaveSystemManager.SAVE();
-                Helper.ShowNotification("Game Saved!", "Done!");
-            }
-
-            if (Input.GetKeyDown(Enum.TryParse<KeyCode>(_newsBoardKeybind.Value, out var nbKey) ? nbKey : KeyCode.F6))
-            {
-                if (UIManager.NEWS_BOARD_UI is null) return;
-                if (UIManager.NEWS_BOARD_UI.isActive)
-                {
-                    UIManager.NEWS_BOARD_UI.OnRightClick();
-                }
-                else
-                {
-                    UIManager.NEWS_BOARD_UI.Call();
-                    UIManager.NEWS_BOARD_UI.RefreshNewsBoard();
-                }
-            }
-
-            if (Input.GetKeyDown(Enum.TryParse<KeyCode>(_toggleHudKeybind.Value, out var hudKey) ? hudKey : KeyCode.F7))
-            {
-                if (UIManager.GAME_HUD is null) return;
-                if (UIManager.GAME_HUD.active)
-                {
-                    UIManager.GAME_HUD.Hide();
-                }
-                else
-                {
-                    UIManager.GAME_HUD.Show();
-                }
-
-                UIManager.GAME_HUD.topBlackBar.SetActive(false);
-                UIManager.GAME_HUD.botBlackBar.SetActive(false);
-            }
-
-            if (Input.GetKeyDown(Enum.TryParse<KeyCode>(_exitKeybind.Value, out var exitKey) ? exitKey : KeyCode.F11))
-            {
-                StartCoroutine(SaveAndExitIE());
-            }
-        }
-
-        private static IEnumerator FastTravelIE()
-        {
-            Helper.ShowNotification("Going home...", "Home!");
-            yield return new WaitForSeconds(3f);
-            Helper.Teleport(FastTravelID.MC_HOUSE, MapRegion.CITY);
-        }
-
-        private static IEnumerator SaveAndExitIE()
-        {
-            if (_saveOnExitWithF11.Value)
-            {
-                SaveSystemManager.SAVE();
-                Helper.ShowNotification("Game Saved! Exiting...", "Bye!");
+                UIManager.NEWS_BOARD_UI.OnRightClick();
             }
             else
             {
-                Helper.ShowNotification("Exiting...", "Bye!");
+                UIManager.NEWS_BOARD_UI.Call();
+                UIManager.NEWS_BOARD_UI.RefreshNewsBoard();
+            }
+        }
+
+        if (ToggleHudKeybind.Value.IsUp())
+        {
+            if (UIManager.GAME_HUD is null) return;
+            if (UIManager.GAME_HUD.active)
+            {
+                UIManager.GAME_HUD.Hide();
+            }
+            else
+            {
+                UIManager.GAME_HUD.Show();
             }
 
-            yield return new WaitForSeconds(2f);
-            Application.Quit();
+            UIManager.GAME_HUD.topBlackBar.SetActive(false);
+            UIManager.GAME_HUD.botBlackBar.SetActive(false);
         }
 
-        internal static void L(string message)
+        if (ExitKeybind.Value.IsUp())
         {
-            _logger.LogWarning(message);
+            StartCoroutine(SaveAndExitIE());
         }
+    }
+
+    private static IEnumerator FastTravelIE()
+    {
+        Helper.ShowNotification("Going home...", "Home!");
+        yield return new WaitForSeconds(3f);
+        Helper.Teleport(FastTravelID.MC_HOUSE, MapRegion.CITY);
+    }
+
+    private static IEnumerator SaveAndExitIE()
+    {
+        if (SaveOnExitWithF11.Value)
+        {
+            SaveSystemManager.SAVE();
+            Helper.ShowNotification("Game Saved! Exiting...", "Bye!");
+        }
+        else
+        {
+            Helper.ShowNotification("Exiting...", "Bye!");
+        }
+
+        yield return new WaitForSeconds(2f);
+        Application.Quit();
+    }
+
+    internal static void L(string message, bool info = false)
+    {
+        if (info)
+        {
+            Log.LogInfo(message);
+            return;
+        }
+        Log.LogWarning(message);
     }
 }

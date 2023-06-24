@@ -1,8 +1,10 @@
-﻿using HarmonyLib;
+﻿using System.Diagnostics.CodeAnalysis;
+using HarmonyLib;
 
 namespace AnAlchemicalCollection;
 
 [HarmonyPatch]
+[SuppressMessage("ReSharper", "InconsistentNaming")]
 public static class MiscPatches
 {
     //stops ridiculous log spam
@@ -25,6 +27,7 @@ public static class MiscPatches
     [HarmonyPatch(typeof(tk2dBaseSprite), nameof(tk2dBaseSprite.SetSprite), typeof(tk2dSpriteCollectionData),
         typeof(string))]
     public static bool tk2dBaseSprite_SetSprite(tk2dSpriteCollectionData newCollection, string spriteName,
+        // ReSharper disable once RedundantAssignment
         ref tk2dBaseSprite __instance, ref bool __result)
     {
         var spriteIdByName = newCollection.GetSpriteIdByName(spriteName, -1);

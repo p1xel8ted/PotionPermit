@@ -1,11 +1,14 @@
-﻿using HarmonyLib;
+﻿using System.Diagnostics.CodeAnalysis;
+using HarmonyLib;
 
 namespace AnAlchemicalCollection;
 
 [HarmonyPatch]
+[SuppressMessage("ReSharper", "InconsistentNaming")]
 public static class FastTravelPatches
 {
-    public static bool DoFastTravel;
+    private const string McHome = "MC_HOME";
+    public static bool DoFastTravel { get; set; }
 
     [HarmonyPatch(typeof(WorldMapUI), nameof(WorldMapUI.GoToDestination))]
     [HarmonyPrefix]
@@ -13,7 +16,7 @@ public static class FastTravelPatches
     {
         if (!DoFastTravel) return;
         
-        var marker = __instance.fastTravelPinList.Find(a => a.GetMarkerID == "MC_HOME");
+        var marker = __instance.fastTravelPinList.Find(a => a.GetMarkerID == McHome);
         __instance.currentSelectedPin.Add(marker);
         __instance.currentSelectedPin[0] = marker;
         DoFastTravel = false;

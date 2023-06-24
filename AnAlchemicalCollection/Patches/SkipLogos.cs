@@ -1,8 +1,10 @@
-﻿using HarmonyLib;
+﻿using System.Diagnostics.CodeAnalysis;
+using HarmonyLib;
 
 namespace AnAlchemicalCollection;
 
 [HarmonyPatch]
+[SuppressMessage("ReSharper", "InconsistentNaming")]
 public static class SkipLogos
 {
     [HarmonyPrefix]
