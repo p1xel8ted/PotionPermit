@@ -65,6 +65,7 @@ download/*
 AAA_Releases
 AAA_Releases/
 AAA_Releases/*
+/AAA_Releases/*
 
 # Gradle
 .idea/**/gradle.xml
