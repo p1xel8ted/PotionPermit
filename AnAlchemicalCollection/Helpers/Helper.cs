@@ -5,7 +5,18 @@ using NotificationEnum;
 namespace AnAlchemicalCollection;
 
 public static class Helper
-{ public static void ShowNotification(string mainText, string smallText)
+{
+    public static float CalculateLowestMultiplierAbove50(float refreshRate)
+    {
+        var fps = refreshRate;
+        while (fps > 50)
+        {
+            fps /= 2;
+        }
+        return fps * 2;
+    }
+
+    public static void ShowNotification(string mainText, string smallText)
     {
         var comp = UIManager.NOTIFICATION_UI_MANAGER;
         var getInactiveEtcNotificationUI = comp.GetInactiveEtcNotificationUI;

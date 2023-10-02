@@ -17,8 +17,8 @@ public class Plugin : BaseUnityPlugin
 {
     private const string PluginGuid = "p1xel8ted.potionpermit.alchemical_collection";
     private const string PluginName = "An Alchemical Collection";
-    private const string PluginVersion = "0.1.4";
-  
+    private const string PluginVersion = "0.1.5";
+
     private static readonly Harmony Harmony = new(PluginGuid);
     private static ManualLogSource Log { get; set; }
     public static ConfigEntry<float> RunSpeedMultiplier { get; private set; }
@@ -46,64 +46,120 @@ public class Plugin : BaseUnityPlugin
     internal static int CameraZoomBacking { get; set; }
     private static ConfigEntry<bool> TimeManipulation { get; set; }
     internal static ConfigEntry<float> TimeMultiplier { get; private set; }
+
+    private static ConfigEntry<float> IncreaseUpdateRate { get; set; }
     private static TimePatches TimeInstance { get; set; }
-   
+
+    private static int MaxRefreshRate => Screen.resolutions.Max(a => a.refreshRate);
+
     public static Resolution Resolution = new()
     {
         width = Display.main.systemWidth,
         height = Display.main.systemHeight,
-        refreshRate = Screen.resolutions.Max(a => a.refreshRate)
+        refreshRate = MaxRefreshRate
     };
 
     private void Awake()
     {
-        
         Log = Logger;
         SceneManager.sceneLoaded += SceneManager_sceneLoaded;
         TimeInstance = gameObject.AddComponent<TimePatches>();
-       
+
         // Display Resolution Configuration
-        ModifyResolutions = Config.Bind("1. Display Settings", "Enable Custom Resolution", false, new ConfigDescription("Toggle the usage of custom resolution settings.", null, new ConfigurationManagerAttributes {Order = 101}));
-        Width = Config.Bind("1. Display Settings", "Custom Width", Display.main.systemWidth, new ConfigDescription("Define the custom display width.", null, new ConfigurationManagerAttributes {Order = 100}));
-        Height = Config.Bind("1. Display Settings", "Custom Height", Display.main.systemHeight, new ConfigDescription("Define the custom display height.", null, new ConfigurationManagerAttributes {Order = 99}));
-        Refresh = Config.Bind("1. Display Settings", "Custom Refresh Rate", Screen.resolutions.Max(a => a.refreshRate), new ConfigDescription("Define the custom display refresh rate.", null, new ConfigurationManagerAttributes {Order = 98}));
-        CustomTargetFramerate = Config.Bind("1. Display Settings", "Enable Custom Target Frame Rate", false, new ConfigDescription("Toggle the usage of custom target frame rate settings. May or may not do anything.", null, new ConfigurationManagerAttributes {Order = 97}));
-        FrameRate = Config.Bind("1. Display Settings", "Target Frame Rate", Screen.resolutions.Max(a => a.refreshRate), new ConfigDescription("Set the target frame rate.", null, new ConfigurationManagerAttributes {Order = 96}));
+        ModifyResolutions = Config.Bind("1. Display Settings", "Enable Custom Resolution", false,
+            new ConfigDescription("Toggle the usage of custom resolution settings.", null,
+                new ConfigurationManagerAttributes {Order = 101}));
+        Width = Config.Bind("1. Display Settings", "Custom Width", Display.main.systemWidth,
+            new ConfigDescription("Define the custom display width.", null,
+                new ConfigurationManagerAttributes {Order = 100}));
+        Height = Config.Bind("1. Display Settings", "Custom Height", Display.main.systemHeight,
+            new ConfigDescription("Define the custom display height.", null,
+                new ConfigurationManagerAttributes {Order = 99}));
+        Refresh = Config.Bind("1. Display Settings", "Custom Refresh Rate", Screen.resolutions.Max(a => a.refreshRate),
+            new ConfigDescription("Define the custom display refresh rate.", null,
+                new ConfigurationManagerAttributes {Order = 98}));
+        CustomTargetFramerate = Config.Bind("1. Display Settings", "Enable Custom Target Frame Rate", false,
+            new ConfigDescription("Toggle the usage of custom target frame rate settings. May or may not do anything.",
+                null, new ConfigurationManagerAttributes {Order = 97}));
+        FrameRate = Config.Bind("1. Display Settings", "Target Frame Rate", Screen.resolutions.Max(a => a.refreshRate),
+            new ConfigDescription("Set the target frame rate.", null, new ConfigurationManagerAttributes {Order = 96}));
         Resolution.width = Width.Value;
         Resolution.height = Height.Value;
         Resolution.refreshRate = Refresh.Value;
 
         // Tool Usage Configuration
-        AutoChangeTool = Config.Bind("2. Tools Settings", "Automatic Tool Switching", true, new ConfigDescription("Enable the automatic tool switching based on context.", null, new ConfigurationManagerAttributes {Order = 90}));
-        HalveToolStaminaUsage = Config.Bind("2. Tools Settings", "Halve Stamina Usage", true, new ConfigDescription("Enable the halving of stamina usage for tools.", null, new ConfigurationManagerAttributes {Order = 89}));
+        AutoChangeTool = Config.Bind("2. Tools Settings", "Automatic Tool Switching", true,
+            new ConfigDescription("Enable the automatic tool switching based on context.", null,
+                new ConfigurationManagerAttributes {Order = 90}));
+        HalveToolStaminaUsage = Config.Bind("2. Tools Settings", "Halve Stamina Usage", true,
+            new ConfigDescription("Enable the halving of stamina usage for tools.", null,
+                new ConfigurationManagerAttributes {Order = 89}));
 
         // Game Intro Configuration
-        SkipLogos = Config.Bind("3. Intro Settings", "Skip Intro Logos", true, new ConfigDescription("Enable or disable the intro logos.", null, new ConfigurationManagerAttributes {Order = 80}));
-        SpeedUpMenuIntro = Config.Bind("3. Intro Settings", "Accelerate Menu Intro", true, new ConfigDescription("Enable or disable the acceleration of menu intro.", null, new ConfigurationManagerAttributes {Order = 79}));
+        SkipLogos = Config.Bind("3. Intro Settings", "Skip Intro Logos", true,
+            new ConfigDescription("Enable or disable the intro logos.", null,
+                new ConfigurationManagerAttributes {Order = 80}));
+        SpeedUpMenuIntro = Config.Bind("3. Intro Settings", "Accelerate Menu Intro", true,
+            new ConfigDescription("Enable or disable the acceleration of menu intro.", null,
+                new ConfigurationManagerAttributes {Order = 79}));
 
         // Saving Configuration
-        SaveOnExitWithF11 = Config.Bind("4. Saving Settings", "Save On Quick Exit", true, new ConfigDescription("Enable saving the game on quick exit.", null, new ConfigurationManagerAttributes {Order = 70}));
+        SaveOnExitWithF11 = Config.Bind("4. Saving Settings", "Save On Quick Exit", true,
+            new ConfigDescription("Enable saving the game on quick exit.", null,
+                new ConfigurationManagerAttributes {Order = 70}));
 
         // Player Speed Configuration
-        EnableRunSpeedMultiplier = Config.Bind("5. Player Speed", "Modify Run Speed", true, new ConfigDescription("Enable the modification of player run speed.", null, new ConfigurationManagerAttributes {Order = 60}));
-        RunSpeedMultiplier = Config.Bind("5. Player Speed", "Run Speed Multiplier", 1.5f, new ConfigDescription("Set the player run speed multiplier.", null, new ConfigurationManagerAttributes {Order = 59}));
-        LeftRightRunSpeedMultiplier = Config.Bind("5. Player Speed", "Lateral Run Speed Multiplier", 1.25f, new ConfigDescription("Set the lateral run speed multiplier.", null, new ConfigurationManagerAttributes {Order = 58}));
+        EnableRunSpeedMultiplier = Config.Bind("5. Player Speed", "Modify Run Speed", true,
+            new ConfigDescription("Enable the modification of player run speed.", null,
+                new ConfigurationManagerAttributes {Order = 60}));
+        RunSpeedMultiplier = Config.Bind("5. Player Speed", "Run Speed Multiplier", 1.5f,
+            new ConfigDescription("Set the player run speed multiplier.", null,
+                new ConfigurationManagerAttributes {Order = 59}));
+        LeftRightRunSpeedMultiplier = Config.Bind("5. Player Speed", "Lateral Run Speed Multiplier", 1.25f,
+            new ConfigDescription("Set the lateral run speed multiplier.", null,
+                new ConfigurationManagerAttributes {Order = 58}));
 
         // Keybinds Configuration
-        ExitKeybind = Config.Bind("6. Keybinds", "Quick Exit Key", new KeyboardShortcut(KeyCode.F11), new ConfigDescription("Set the key for quick exit.", null, new ConfigurationManagerAttributes {Order = 50}));
-        FastTravelKeybind = Config.Bind("6. Keybinds", "Fast Travel Key", new KeyboardShortcut(KeyCode.F4), new ConfigDescription("Set the key for fast travel.", null, new ConfigurationManagerAttributes {Order = 49}));
-        QuickSaveKeybind = Config.Bind("6. Keybinds", "Quick Save Key", new KeyboardShortcut(KeyCode.F5), new ConfigDescription("Set the key for quick save.", null, new ConfigurationManagerAttributes {Order = 48}));
-        NewsBoardKeybind = Config.Bind("6. Keybinds", "News Board Toggle Key", new KeyboardShortcut(KeyCode.F6), new ConfigDescription("Set the key to toggle the news board.", null, new ConfigurationManagerAttributes {Order = 47}));
-        ToggleHudKeybind = Config.Bind("6. Keybinds", "HUD Toggle Key", new KeyboardShortcut(KeyCode.F7), new ConfigDescription("Set the key to toggle the HUD.", null, new ConfigurationManagerAttributes {Order = 46}));
+        ExitKeybind = Config.Bind("6. Keybinds", "Quick Exit Key", new KeyboardShortcut(KeyCode.F11),
+            new ConfigDescription("Set the key for quick exit.", null,
+                new ConfigurationManagerAttributes {Order = 50}));
+        FastTravelKeybind = Config.Bind("6. Keybinds", "Fast Travel Key", new KeyboardShortcut(KeyCode.F4),
+            new ConfigDescription("Set the key for fast travel.", null,
+                new ConfigurationManagerAttributes {Order = 49}));
+        QuickSaveKeybind = Config.Bind("6. Keybinds", "Quick Save Key", new KeyboardShortcut(KeyCode.F5),
+            new ConfigDescription("Set the key for quick save.", null,
+                new ConfigurationManagerAttributes {Order = 48}));
+        NewsBoardKeybind = Config.Bind("6. Keybinds", "News Board Toggle Key", new KeyboardShortcut(KeyCode.F6),
+            new ConfigDescription("Set the key to toggle the news board.", null,
+                new ConfigurationManagerAttributes {Order = 47}));
+        ToggleHudKeybind = Config.Bind("6. Keybinds", "HUD Toggle Key", new KeyboardShortcut(KeyCode.F7),
+            new ConfigDescription("Set the key to toggle the HUD.", null,
+                new ConfigurationManagerAttributes {Order = 46}));
 
         //Time manipulation
-        TimeManipulation = Config.Bind("7. Time Manipulation", "Enable Time Manipulation", true, new ConfigDescription("Enable time manipulation.", null, new ConfigurationManagerAttributes {Order = 45}));
+        TimeManipulation = Config.Bind("7. Time Manipulation", "Enable Time Manipulation", true,
+            new ConfigDescription("Enable time manipulation.", null, new ConfigurationManagerAttributes {Order = 45}));
         TimeManipulation.SettingChanged += (_, _) => { TimeInstance.enabled = TimeManipulation.Value; };
-        TimeMultiplier = Config.Bind("7. Time Manipulation", "Time Multiplier", 1.0f, new ConfigDescription("Set the time multiplier.", new AcceptableValueRange<float>(1, 10), new ConfigurationManagerAttributes {ShowRangeAsPercent = false, Order = 44}));
+        TimeMultiplier = Config.Bind("7. Time Manipulation", "Time Multiplier", 1.0f,
+            new ConfigDescription("Set the time multiplier.", new AcceptableValueRange<float>(1, 10),
+                new ConfigurationManagerAttributes {ShowRangeAsPercent = false, Order = 44}));
         TimeMultiplier.SettingChanged += (_, _) =>
         {
             if (!TimeManipulation.Value) return;
             TimeInstance.UpdateValues();
+        };
+
+        //Misc
+        IncreaseUpdateRate = Config.Bind("8. Misc", "Increase Update Rate",
+            Helper.CalculateLowestMultiplierAbove50(MaxRefreshRate),
+            new ConfigDescription(
+                "Sets the rate the camera and physics update. Can resolve camera judder, but setting too high can cause performance issues. Game default is 50fps. Ideally it should be a multiple of your refresh rate. You may/may not notice a difference.",
+                new AcceptableValueRange<float>(50f, 360f),
+                new ConfigurationManagerAttributes {ShowRangeAsPercent = false, Order = 43}));
+        IncreaseUpdateRate.SettingChanged += (_, _) =>
+        {
+            Time.fixedDeltaTime = 1f / IncreaseUpdateRate.Value;
+            Log.LogInfo($"FixedDeltaTime set to {Time.fixedDeltaTime} ({IncreaseUpdateRate.Value}fps)");
         };
     }
 
@@ -216,6 +272,7 @@ public class Plugin : BaseUnityPlugin
             Log.LogInfo(message);
             return;
         }
+
         Log.LogWarning(message);
     }
 }

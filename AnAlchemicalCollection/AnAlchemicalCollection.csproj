@@ -3,7 +3,7 @@
   <PropertyGroup>
     <TargetFramework>net48</TargetFramework>
     <Description>Mods</Description>
-    <Version>0.1.4</Version>
+    <Version>0.1.5</Version>
     <AssemblyVersion>$(Version)</AssemblyVersion>
     <FileVersion>$(Version)</FileVersion>
   </PropertyGroup>
