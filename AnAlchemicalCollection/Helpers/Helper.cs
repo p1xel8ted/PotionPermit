@@ -1,19 +1,20 @@
 ﻿using FastTravelEnum;
 using GlobalEnum;
 using NotificationEnum;
+using UnityEngine;
 
 namespace AnAlchemicalCollection;
 
 public static class Helper
 {
-    public static float CalculateLowestMultiplierAbove50(float refreshRate)
+    public static int CalculateLowestMultiplierAbove50(float refreshRate)
     {
         var fps = refreshRate;
         while (fps > 50)
         {
             fps /= 2;
         }
-        return fps * 2;
+        return Mathf.RoundToInt(fps * 2);
     }
 
     public static void ShowNotification(string mainText, string smallText)
