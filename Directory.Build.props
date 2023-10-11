@@ -3,7 +3,7 @@
 
   <!--Base Settings-->
   <PropertyGroup>
-   <Description>$(MSBuildProjectName)</Description>
+
     <TargetFramework>net481</TargetFramework>
     <LangVersion>latest</LangVersion>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
@@ -11,7 +11,7 @@
        <IsPackable>false</IsPackable>
            <Authors>p1xel8ted</Authors>
     <Company>$(Authors)</Company>
-    <Product>$(MSBuildProjectName)</Product>
+   
     <PackageId>$(MSBuildProjectName)</PackageId>
       <RestoreAdditionalProjectSources>
           https://api.nuget.org/v3/index.json;
