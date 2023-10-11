@@ -1,13 +1,17 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
+using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using BepInEx;
 using BepInEx.Configuration;
 using BepInEx.Logging;
+using Cinemachine;
 using FastTravelEnum;
 using GlobalEnum;
 using HarmonyLib;
 using UnityEngine;
+using UnityEngine.Analytics;
 using UnityEngine.SceneManagement;
 
 namespace AnAlchemicalCollection;
@@ -17,7 +21,7 @@ public class Plugin : BaseUnityPlugin
 {
     private const string PluginGuid = "p1xel8ted.potionpermit.alchemical_collection";
     private const string PluginName = "An Alchemical Collection";
-    private const string PluginVersion = "0.1.5";
+    private const string PluginVersion = "0.1.6";
 
     private static readonly Harmony Harmony = new(PluginGuid);
     private static ManualLogSource Log { get; set; }
@@ -41,13 +45,17 @@ public class Plugin : BaseUnityPlugin
     private static ConfigEntry<KeyboardShortcut> QuickSaveKeybind { get; set; }
     private static ConfigEntry<KeyboardShortcut> NewsBoardKeybind { get; set; }
     private static ConfigEntry<KeyboardShortcut> ToggleHudKeybind { get; set; }
-
-    internal static ConfigEntry<int> CameraZoom { get; private set; }
-    internal static int CameraZoomBacking { get; set; }
+    private static ConfigEntry<bool> ModifyCamera { get; set; }
+    private static ConfigEntry<float> CameraZoomValue { get; set; }
     private static ConfigEntry<bool> TimeManipulation { get; set; }
     internal static ConfigEntry<float> TimeMultiplier { get; private set; }
+internal static ConfigEntry<bool> DisableCharacterBob { get; private set; }
+    private static ConfigEntry<bool> IncreaseUpdateRate { get; set; }
+    private static ConfigEntry<int> IncreaseUpdateRateValue { get; set; }
 
-    private static ConfigEntry<float> IncreaseUpdateRate { get; set; }
+    private static ConfigEntry<bool> ModifyHudScale { get; set; }
+    private static ConfigEntry<float> ModifyHudScaleValue { get; set; }
+
     private static TimePatches TimeInstance { get; set; }
 
     private static int MaxRefreshRate => Screen.resolutions.Max(a => a.refreshRate);
@@ -119,30 +127,49 @@ public class Plugin : BaseUnityPlugin
             new ConfigDescription("Set the lateral run speed multiplier.", null,
                 new ConfigurationManagerAttributes {Order = 58}));
 
-        // Keybinds Configuration
-        ExitKeybind = Config.Bind("6. Keybinds", "Quick Exit Key", new KeyboardShortcut(KeyCode.F11),
+        // Keybinding Configuration
+        ExitKeybind = Config.Bind("6. Keybinding", "Quick Exit Key", new KeyboardShortcut(KeyCode.F11),
             new ConfigDescription("Set the key for quick exit.", null,
                 new ConfigurationManagerAttributes {Order = 50}));
-        FastTravelKeybind = Config.Bind("6. Keybinds", "Fast Travel Key", new KeyboardShortcut(KeyCode.F4),
+        FastTravelKeybind = Config.Bind("6. Keybinding", "Fast Travel Key", new KeyboardShortcut(KeyCode.F4),
             new ConfigDescription("Set the key for fast travel.", null,
                 new ConfigurationManagerAttributes {Order = 49}));
-        QuickSaveKeybind = Config.Bind("6. Keybinds", "Quick Save Key", new KeyboardShortcut(KeyCode.F5),
+        QuickSaveKeybind = Config.Bind("6. Keybinding", "Quick Save Key", new KeyboardShortcut(KeyCode.F5),
             new ConfigDescription("Set the key for quick save.", null,
                 new ConfigurationManagerAttributes {Order = 48}));
-        NewsBoardKeybind = Config.Bind("6. Keybinds", "News Board Toggle Key", new KeyboardShortcut(KeyCode.F6),
+        NewsBoardKeybind = Config.Bind("6. Keybinding", "News Board Toggle Key", new KeyboardShortcut(KeyCode.F6),
             new ConfigDescription("Set the key to toggle the news board.", null,
                 new ConfigurationManagerAttributes {Order = 47}));
-        ToggleHudKeybind = Config.Bind("6. Keybinds", "HUD Toggle Key", new KeyboardShortcut(KeyCode.F7),
+        ToggleHudKeybind = Config.Bind("6. Keybinding", "HUD Toggle Key", new KeyboardShortcut(KeyCode.F7),
             new ConfigDescription("Set the key to toggle the HUD.", null,
                 new ConfigurationManagerAttributes {Order = 46}));
 
+        //Camera manipulation
+        ModifyCamera = Config.Bind("7. Camera Manipulation", "Enable Camera Manipulation", true,
+            new ConfigDescription("Enable camera manipulation.", null,
+                new ConfigurationManagerAttributes {Order = 45}));
+        CameraZoomValue = Config.Bind("7. Camera Manipulation", "Camera Zoom", 1f,
+            new ConfigDescription("Set the camera zoom.", new AcceptableValueRange<float>(0.1f, 3f),
+                new ConfigurationManagerAttributes {ShowRangeAsPercent = false, Order = 44}));
+        CameraZoomValue.SettingChanged += (_, _) => { UpdateCameraZoom(); };
+
+
+        //Scale manipulation
+        ModifyHudScale = Config.Bind("7. Scale Manipulation", "Enable Scale Manipulation", true,
+            new ConfigDescription("Enable scale manipulation.", null, new ConfigurationManagerAttributes {Order = 43}));
+        ModifyHudScale.SettingChanged += (_, _) => { ModifyHud(); };
+        ModifyHudScaleValue = Config.Bind("7. Scale Manipulation", "HUD Scale", 1.0f,
+            new ConfigDescription("Set the HUD scale.", new AcceptableValueRange<float>(0.5f, 2.0f),
+                new ConfigurationManagerAttributes {ShowRangeAsPercent = false, Order = 42}));
+        ModifyHudScaleValue.SettingChanged += (_, _) => { ModifyHud(); };
+
         //Time manipulation
         TimeManipulation = Config.Bind("7. Time Manipulation", "Enable Time Manipulation", true,
-            new ConfigDescription("Enable time manipulation.", null, new ConfigurationManagerAttributes {Order = 45}));
+            new ConfigDescription("Enable time manipulation.", null, new ConfigurationManagerAttributes {Order = 43}));
         TimeManipulation.SettingChanged += (_, _) => { TimeInstance.enabled = TimeManipulation.Value; };
         TimeMultiplier = Config.Bind("7. Time Manipulation", "Time Multiplier", 1.0f,
             new ConfigDescription("Set the time multiplier.", new AcceptableValueRange<float>(1, 10),
-                new ConfigurationManagerAttributes {ShowRangeAsPercent = false, Order = 44}));
+                new ConfigurationManagerAttributes {ShowRangeAsPercent = false, Order = 41}));
         TimeMultiplier.SettingChanged += (_, _) =>
         {
             if (!TimeManipulation.Value) return;
@@ -150,26 +177,97 @@ public class Plugin : BaseUnityPlugin
         };
 
         //Misc
-        IncreaseUpdateRate = Config.Bind("8. Misc", "Increase Update Rate",
+        IncreaseUpdateRate = Config.Bind("8. Misc", "Enable Increase Update Rate", true,
+            new ConfigDescription("Enable the increase of the update rate.", null,
+                new ConfigurationManagerAttributes {Order = 40}));
+        IncreaseUpdateRate.SettingChanged += (_, _) => { UpdateFixedDeltaTime(); };
+        IncreaseUpdateRateValue = Config.Bind("8. Misc", "Increase Update Rate",
             Helper.CalculateLowestMultiplierAbove50(MaxRefreshRate),
             new ConfigDescription(
                 "Sets the rate the camera and physics update. Can resolve camera judder, but setting too high can cause performance issues. Game default is 50fps. Ideally it should be a multiple of your refresh rate. You may/may not notice a difference.",
-                new AcceptableValueRange<float>(50f, 360f),
-                new ConfigurationManagerAttributes {ShowRangeAsPercent = false, Order = 43}));
-        IncreaseUpdateRate.SettingChanged += (_, _) =>
+                null,
+                new ConfigurationManagerAttributes {ShowRangeAsPercent = false, Order = 40}));
+        IncreaseUpdateRateValue.SettingChanged += (_, _) =>
         {
-            Time.fixedDeltaTime = 1f / IncreaseUpdateRate.Value;
-            Log.LogInfo($"FixedDeltaTime set to {Time.fixedDeltaTime} ({IncreaseUpdateRate.Value}fps)");
+            IncreaseUpdateRateValue.Value = Mathf.RoundToInt(IncreaseUpdateRateValue.Value);
+            UpdateFixedDeltaTime();
         };
+        DisableCharacterBob = Config.Bind("8. Misc", "Disable Character Bob", true,
+            new ConfigDescription("Toggle the player and NPC models bobbing up and down when idle. The dog will immediately sit instead of standing and bobbing.", null,
+                new ConfigurationManagerAttributes {Order = 39}));
     }
 
+    private static void UpdateFixedDeltaTime()
+    {
+        if (!IncreaseUpdateRate.Value) return;
+        Time.fixedDeltaTime = 1f / IncreaseUpdateRateValue.Value;
+      
+    }
+
+    private static void ModifyHud()
+    {
+        if (!ModifyHudScale.Value) return;
+        if (UIManager.GAME_HUD is null) return;
+        UIManager.GAME_HUD.transform.localScale = new Vector3(ModifyHudScaleValue.Value, ModifyHudScaleValue.Value, 1);
+    }
+
+    private static readonly List<CinemachineVirtualCamera> VirtualCameras = new();
+    private static readonly Dictionary<string, float> OriginalCameraZoomValues = new();
+
+    private static void UpdateCameraZoom()
+    {
+        foreach (var camera in VirtualCameras.Where(a => a is not null))
+        {
+            var baseZoom = GetOrSetOriginalZoomValue(camera);
+        
+            camera.m_Lens.OrthographicSize = ModifyCamera.Value 
+                ? baseZoom * CameraZoomValue.Value 
+                : baseZoom;
+        }
+    }
+
+    private static float GetOrSetOriginalZoomValue(CinemachineVirtualCamera camera)
+    {
+        if (OriginalCameraZoomValues.TryGetValue(camera.name, out var zoom))
+        {
+            return zoom;
+        }
+
+        OriginalCameraZoomValues.Add(camera.name, camera.m_Lens.OrthographicSize);
+        return camera.m_Lens.OrthographicSize;
+    }
+    
     private static void SceneManager_sceneLoaded(Scene arg0, LoadSceneMode arg1)
+    {
+        RefreshVirtualCameras();
+        SetTargetFrameRate();
+        SetScreenResolution();
+        UpdateFixedDeltaTime();
+        ModifyHud();
+        UpdateCameraZoom();
+    }
+
+    private static void RefreshVirtualCameras()
+    {
+        VirtualCameras.Clear();
+        VirtualCameras.AddRange(Resources.FindObjectsOfTypeAll<CinemachineVirtualCamera>());
+    
+        foreach (var cam in VirtualCameras.Where(cam => !OriginalCameraZoomValues.ContainsKey(cam.name)))
+        {
+            OriginalCameraZoomValues.Add(cam.name, cam.m_Lens.OrthographicSize);
+        }
+    }
+
+    private static void SetTargetFrameRate()
     {
         if (CustomTargetFramerate.Value)
         {
             Application.targetFrameRate = FrameRate.Value;
         }
+    }
 
+    private static void SetScreenResolution()
+    {
         if (ModifyResolutions.Value)
         {
             Screen.SetResolution(Resolution.width, Resolution.height, Screen.fullScreen, Resolution.refreshRate);
@@ -192,55 +290,72 @@ public class Plugin : BaseUnityPlugin
 
     private void Update()
     {
-        if (UIManager.MAIN_MENU is not null && UIManager.MAIN_MENU.isActive) return;
+        if (IsMainMenuActive()) return;
 
-        if (FastTravelKeybind.Value.IsUp())
+        HandleFastTravel();
+        HandleQuickSave();
+        HandleNewsBoard();
+        HandleToggleHud();
+        HandleExit();
+    }
+
+    public static bool IsMainMenuActive()
+    {
+        return UIManager.MAIN_MENU is not null && UIManager.MAIN_MENU.isActive;
+    }
+
+    private void HandleFastTravel()
+    {
+        if (!FastTravelKeybind.Value.IsUp()) return;
+        FastTravelPatches.DoFastTravel = true;
+        StartCoroutine(FastTravelIE());
+    }
+
+    private static void HandleQuickSave()
+    {
+        if (!QuickSaveKeybind.Value.IsUp()) return;
+        SaveSystemManager.SAVE();
+        Helper.ShowNotification("Game Saved!", "Done!");
+    }
+
+    private static void HandleNewsBoard()
+    {
+        if (!NewsBoardKeybind.Value.IsUp() || UIManager.NEWS_BOARD_UI is null) return;
+        if (UIManager.NEWS_BOARD_UI.isActive)
         {
-            FastTravelPatches.DoFastTravel = true;
-            StartCoroutine(FastTravelIE());
+            UIManager.NEWS_BOARD_UI.OnRightClick();
+        }
+        else
+        {
+            UIManager.NEWS_BOARD_UI.Call();
+            UIManager.NEWS_BOARD_UI.RefreshNewsBoard();
+        }
+    }
+
+    private static void HandleToggleHud()
+    {
+        if (!ToggleHudKeybind.Value.IsUp() || UIManager.GAME_HUD is null) return;
+        if (UIManager.GAME_HUD.active)
+        {
+            UIManager.GAME_HUD.Hide();
+        }
+        else
+        {
+            UIManager.GAME_HUD.Show();
         }
 
-        if (QuickSaveKeybind.Value.IsUp())
-        {
-            SaveSystemManager.SAVE();
-            Helper.ShowNotification("Game Saved!", "Done!");
-        }
+        UIManager.GAME_HUD.topBlackBar.SetActive(false);
+        UIManager.GAME_HUD.botBlackBar.SetActive(false);
+    }
 
-        if (NewsBoardKeybind.Value.IsUp())
-        {
-            if (UIManager.NEWS_BOARD_UI is null) return;
-            if (UIManager.NEWS_BOARD_UI.isActive)
-            {
-                UIManager.NEWS_BOARD_UI.OnRightClick();
-            }
-            else
-            {
-                UIManager.NEWS_BOARD_UI.Call();
-                UIManager.NEWS_BOARD_UI.RefreshNewsBoard();
-            }
-        }
-
-        if (ToggleHudKeybind.Value.IsUp())
-        {
-            if (UIManager.GAME_HUD is null) return;
-            if (UIManager.GAME_HUD.active)
-            {
-                UIManager.GAME_HUD.Hide();
-            }
-            else
-            {
-                UIManager.GAME_HUD.Show();
-            }
-
-            UIManager.GAME_HUD.topBlackBar.SetActive(false);
-            UIManager.GAME_HUD.botBlackBar.SetActive(false);
-        }
-
+    private void HandleExit()
+    {
         if (ExitKeybind.Value.IsUp())
         {
             StartCoroutine(SaveAndExitIE());
         }
     }
+
 
     private static IEnumerator FastTravelIE()
     {
