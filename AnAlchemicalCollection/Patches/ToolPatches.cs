@@ -1,9 +1,11 @@
 ﻿using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
+using CharacterChemist;
 using CharacterIDEnum;
 using GlobalEnum;
 using HarmonyLib;
 using TutorialEnum;
+using UnityEngine;
 
 namespace AnAlchemicalCollection;
 
@@ -21,7 +23,8 @@ public static class ToolPatches
 
     [HarmonyPrefix]
     [HarmonyPatch(typeof(CharacterStatus), nameof(CharacterStatus.SetStatus))]
-    public static void CharacterStatus_SetStatus(ref CharacterStatus __instance, ref BaseStatus _baseStatus, ref BaseStatus _curStatus, CharacterType charType)
+    public static void CharacterStatus_SetStatus(ref CharacterStatus __instance, ref BaseStatus _baseStatus,
+        ref BaseStatus _curStatus, CharacterType charType)
     {
         if (!Plugin.HalveToolStaminaUsage.Value) return;
         if (charType != CharacterType.PLAYER) return;
@@ -38,17 +41,21 @@ public static class ToolPatches
         ToolsHud.ToolsHUDUpdate();
     }
 
-
     [HarmonyPrefix]
-    [HarmonyPatch(typeof(BattleCalculator), nameof(BattleCalculator.Calculator))]
-    public static void BattleCalculator_Calculator(CharacterType typeC, PlayerCharacter player, UnityEngine.Object obj)
+    [HarmonyPatch(typeof(CharacterCollider), nameof(CharacterCollider.OnTriggerEnter2D))]
+    public static void CharacterCollider_OnTriggerEnter2D(Collider2D col)
     {
         if (!Plugin.AutoChangeTool.Value) return;
-        if (typeC != CharacterType.RESOURCES) return;
 
-        var resource = (ResourcesObject) obj;
-        Plugin.L($"BattleCalculator: ResourceID {resource.RESOURCES_ID}");
 
+        ResourcesObject resource = null;
+        if (col.gameObject.GetComponent<ResourcesObject>() != null)
+        {
+            resource = col.gameObject.GetComponent<ResourcesObject>();
+        }
+
+        if (resource == null) return;
+        
 
         if (resource.RESOURCES_ID.ToString().Contains(Plant))
         {
