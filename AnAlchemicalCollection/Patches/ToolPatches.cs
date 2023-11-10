@@ -21,6 +21,33 @@ public static class ToolPatches
     private static ToolsHUDUI ToolsHud { get; set; }
     private static int StaminaUsageCounter { get; set; }
 
+
+
+
+
+    
+    //what is this for? I've forgotten...
+    [HarmonyPostfix]
+    [HarmonyPatch(typeof(PlayerCharacter), nameof(PlayerCharacter.CharacterIngameControl))]
+    public static void CharacterStatus_SetStatus(ref PlayerCharacter __instance)
+    {
+        if ((__instance.controller.PETAK.WasPressed || __instance.controller.PETAK.WasRepeated || Input.GetKeyDown(KeyCode.Mouse0)) && RegionDataManager.WEAPON_ALLOWED)
+        {
+            if (!__instance.characterStatus.isEmptyStamina)
+            {
+                __instance.pushedAction = "PETAK";
+                __instance.isAttacking = true;
+                __instance.isHoldButton = true;
+                __instance.isRelease = false;
+                __instance.isUseSkill = false;
+            }
+            else
+            {
+                __instance.staminaReminder.Call();
+            }
+        }
+    }
+
     [HarmonyPrefix]
     [HarmonyPatch(typeof(CharacterStatus), nameof(CharacterStatus.SetStatus))]
     public static void CharacterStatus_SetStatus(ref CharacterStatus __instance, ref BaseStatus _baseStatus,
@@ -55,7 +82,7 @@ public static class ToolPatches
         }
 
         if (resource == null) return;
-        
+
 
         if (resource.RESOURCES_ID.ToString().Contains(Plant))
         {

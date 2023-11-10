@@ -1,10 +1,12 @@
-﻿using CharacterChemist.Animation;
+﻿using System.Diagnostics.CodeAnalysis;
+using CharacterChemist.Animation;
 using GlobalEnum;
 using HarmonyLib;
 
 namespace AnAlchemicalCollection;
 
 [Harmony]
+[SuppressMessage("ReSharper", "InconsistentNaming")]
 public static class CharacterBobPatches
 {
     [HarmonyPrefix]
@@ -12,7 +14,7 @@ public static class CharacterBobPatches
     public static void CharacterAnimationBase_Play(ref CharacterAnimationBase __instance, ref float durationAnimation,
         ref int totalFrame)
     {
-        if (!Plugin.DisableCharacterBob.Value) return;
+        if (Plugin.CharacterBob.Value) return;
         if (__instance.selectedAnimation != TypeAnimation.Idle) return;
         durationAnimation = 0;
         totalFrame = 0;
@@ -23,7 +25,7 @@ public static class CharacterBobPatches
     public static void CharacterAnimationNPC_Play(ref CharacterAnimationNPC __instance, ref float durationAnimation,
         ref int totalFrame)
     {
-        if (!Plugin.DisableCharacterBob.Value) return;
+        if (Plugin.CharacterBob.Value) return;
         if (__instance.selectedAnimation != TypeAnimation.Idle) return;
         durationAnimation = 0;
         totalFrame = 0;
@@ -34,7 +36,7 @@ public static class CharacterBobPatches
     public static void CharacterAnimationPlayer_Play(ref CharacterAnimationPlayer __instance,
         ref float durationAnimation, ref int totalFrame)
     {
-        if (!Plugin.DisableCharacterBob.Value) return;
+        if (Plugin.CharacterBob.Value) return;
         if (__instance.selectedAnimation != TypeAnimation.Idle) return;
         durationAnimation = 0;
         totalFrame = 0;
@@ -44,7 +46,7 @@ public static class CharacterBobPatches
     [HarmonyPatch(typeof(CharacterAnimationDoggy), nameof(CharacterAnimationDoggy.Play))]
     public static void CharacterAnimationDoggy_Play(ref CharacterAnimationDoggy __instance)
     {
-        if (!Plugin.DisableCharacterBob.Value) return;
+        if (Plugin.CharacterBob.Value) return;
         if (__instance.currentAnimation == TypeAnimation.Dogie_Idle)
         {
             __instance.currentAnimation = TypeAnimation.Dogie_SitIdle;
