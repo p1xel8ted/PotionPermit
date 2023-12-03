@@ -10,12 +10,6 @@ namespace AnAlchemicalCollection;
 [SuppressMessage("ReSharper", "InconsistentNaming")]
 public static class SoundPatches
 {
-    // [HarmonyPrefix]
-    // [HarmonyPatch(typeof(CharacterAnimationPlayer), nameof(CharacterAnimationPlayer.PlayAnimation))]
-    // public static void CharacterAnimationDoggy_CharacterAnimationPlayer(ref TypeAnimation anim)
-    // {
-    //     Plugin.L($"Playing {anim.ToString()}");
-    // }
     
     [HarmonyPrefix]
     [HarmonyPatch(typeof(CharacterAnimationDoggy), nameof(CharacterAnimationDoggy.PlayAnimation))]

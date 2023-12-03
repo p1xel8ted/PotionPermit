@@ -19,7 +19,7 @@ public class Plugin : BaseUnityPlugin
 {
     private const string PluginGuid = "p1xel8ted.potionpermit.alchemical_collection";
     private const string PluginName = "An Alchemical Collection";
-    private const string PluginVersion = "0.1.7";
+    private const string PluginVersion = "0.1.8";
     private const string Preload = "PreLoad";
     private const string MainMenu = "MainMenu";
 
@@ -33,7 +33,7 @@ public class Plugin : BaseUnityPlugin
         refreshRate = MaxRefreshRate
     };
 
-    internal static readonly List<CinemachineVirtualCamera> VirtualCameras = new();
+    internal static readonly List<CinemachineVirtualCamera> VirtualCameras = [];
     internal static readonly Dictionary<string, float> OriginalCameraZoomValues = new();
     private static ManualLogSource Log { get; set; }
     public static ConfigEntry<float> RunSpeedMultiplier { get; private set; }
@@ -286,7 +286,7 @@ public class Plugin : BaseUnityPlugin
     private void OnEnable()
     {
         Harmony.PatchAll(Assembly.GetExecutingAssembly());
-        L($"Plugin {PluginName} is loaded!");
+        L($"Plugin {PluginName} is loaded!",true);
     }
 
     private void OnDisable()

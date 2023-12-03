@@ -15,7 +15,7 @@ public static class FishingPatches
     public static void FishingController_DoStart()
     {
         if (!Plugin.ModifyCamera.Value) return;
-        Plugin.L("Player is fishing, restoring zoom to default");
+        Plugin.L("Player is fishing, restoring zoom to default",true);
         Plugin.UpdateCameraZoom(true);
     }
 
@@ -31,6 +31,6 @@ public static class FishingPatches
     {
         yield return new WaitForSeconds(1.0f);
         Plugin.UpdateCameraZoom();
-        Plugin.L("Player is done fishing, restoring zoom to modified value");
+        Plugin.L("Player is done fishing, restoring zoom to modified value",true);
     }
 }

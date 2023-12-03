@@ -17,7 +17,7 @@ public static class PlayerSpeedPatches
     public static void StorePlayerOriginalSpeed() 
     {
         OriginalPlayerSpeed = PlayerCharacter.Instance.MoveSpeed;
-        Plugin.L($"OriginalPlayerSpeed: {OriginalPlayerSpeed}");
+        Plugin.L($"OriginalPlayerSpeed: {OriginalPlayerSpeed}",true);
     }
 
     // Update player run speed on Move
@@ -60,7 +60,7 @@ public static class PlayerSpeedPatches
     public static void StoreDogOriginalSpeed(ref DogieAI __instance) 
     {
         OriginalDogSpeed= __instance.speed;
-        Plugin.L($"OriginalDogSpeed: {OriginalDogSpeed}");
+        Plugin.L($"OriginalDogSpeed: {OriginalDogSpeed}",true);
     }
 
     // Update dog speed on FIXED_UPDATE

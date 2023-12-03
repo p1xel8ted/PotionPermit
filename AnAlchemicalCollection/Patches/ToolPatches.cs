@@ -21,48 +21,21 @@ public static class ToolPatches
     private static ToolsHUDUI ToolsHud { get; set; }
     private static int StaminaUsageCounter { get; set; }
 
-
-
-
-
-    
-    //what is this for? I've forgotten...
-    [HarmonyPostfix]
-    [HarmonyPatch(typeof(PlayerCharacter), nameof(PlayerCharacter.CharacterIngameControl))]
-    public static void CharacterStatus_SetStatus(ref PlayerCharacter __instance)
-    {
-        if ((__instance.controller.PETAK.WasPressed || __instance.controller.PETAK.WasRepeated || Input.GetKeyDown(KeyCode.Mouse0)) && RegionDataManager.WEAPON_ALLOWED)
-        {
-            if (!__instance.characterStatus.isEmptyStamina)
-            {
-                __instance.pushedAction = "PETAK";
-                __instance.isAttacking = true;
-                __instance.isHoldButton = true;
-                __instance.isRelease = false;
-                __instance.isUseSkill = false;
-            }
-            else
-            {
-                __instance.staminaReminder.Call();
-            }
-        }
-    }
-
     [HarmonyPrefix]
     [HarmonyPatch(typeof(CharacterStatus), nameof(CharacterStatus.SetStatus))]
-    public static void CharacterStatus_SetStatus(ref CharacterStatus __instance, ref BaseStatus _baseStatus,
-        ref BaseStatus _curStatus, CharacterType charType)
+    public static void CharacterStatus_SetStatus(CharacterType charType)
     {
-        if (!Plugin.HalveToolStaminaUsage.Value) return;
-        if (charType != CharacterType.PLAYER) return;
+        if (!Plugin.HalveToolStaminaUsage.Value || charType != CharacterType.PLAYER) return;
+
         StaminaUsageCounter = 0;
-        Plugin.L($"ResetStatus Called. Resetting _hitCounter to 0.");
+        Plugin.L("ResetStatus Called. Resetting _hitCounter to 0.", true);
     }
 
 
     private static void SetTool(WeaponTypeEnum type)
     {
         var tool = ToolsDataList.Find(a => a.WeaponType == type);
+        if (tool == null) return;
         PlayerCharacter.Instance.SetSelectedTools(tool);
         ToolsHud.toolIcon.SetSprite(tool.IconName);
         ToolsHud.ToolsHUDUpdate();
@@ -74,29 +47,19 @@ public static class ToolPatches
     {
         if (!Plugin.AutoChangeTool.Value) return;
 
-
-        ResourcesObject resource = null;
-        if (col.gameObject.GetComponent<ResourcesObject>() != null)
-        {
-            resource = col.gameObject.GetComponent<ResourcesObject>();
-        }
-
+        var resource = col.gameObject.GetComponent<ResourcesObject>();
         if (resource == null) return;
 
-
-        if (resource.RESOURCES_ID.ToString().Contains(Plant))
+        var resourceIdString = resource.RESOURCES_ID.ToString();
+        if (resourceIdString.Contains(Plant))
         {
             SetTool(WeaponTypeEnum.SICKLE);
         }
-
-
-        if (resource.RESOURCES_ID.ToString().Contains(Tree))
+        else if (resourceIdString.Contains(Tree))
         {
             SetTool(WeaponTypeEnum.AXE);
         }
-
-
-        if (resource.RESOURCES_ID.ToString().Contains(Stone) || resource.RESOURCES_ID.ToString().Contains(Rock))
+        else if (resourceIdString.Contains(Stone) || resourceIdString.Contains(Rock))
         {
             SetTool(WeaponTypeEnum.HAMMER);
         }
@@ -118,8 +81,7 @@ public static class ToolPatches
     {
         return !Plugin.HalveToolStaminaUsage.Value;
     }
-
-
+    
     [HarmonyPostfix]
     [HarmonyPatch(typeof(CharacterStatus), nameof(CharacterStatus.UseTools))]
     public static void CharacterStatus_UseTools_Postfix(ref CharacterStatus __instance)
@@ -131,7 +93,7 @@ public static class ToolPatches
         Plugin.L($"Take Energy! Counter: {StaminaUsageCounter}");
         var staminaLoss = -__instance.GetStatusTools().Stamina;
         var newStamina = __instance.currentstatus.Stamina + staminaLoss;
-
+        
         if (newStamina > __instance.GetBaseStatus.Stamina)
         {
             var isStaminaLossNegative = staminaLoss < 0;
@@ -139,17 +101,18 @@ public static class ToolPatches
             staminaLoss = (isStaminaLossNegative ? (staminaLoss + staminaLoss) : (staminaLoss - staminaLoss));
             newStamina = __instance.GetBaseStatus.Stamina;
         }
-
+        
         __instance.currentstatus.Stamina = newStamina;
         __instance.player.EnergySpeed = 100f;
         if (__instance.GetStaminaPercent <= 30f)
         {
             UIManager.TUTORIAL_UI.Call(TutorialID.STAMINA_SYSTEM);
         }
-
+        
         if (UIManager.GAME_HUD != null)
         {
             UIManager.GAME_HUD.GetStaminaBarHUD.OnValueChange(staminaLoss);
         }
     }
+
 }
